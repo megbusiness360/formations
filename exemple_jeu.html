@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OF Simulator 2025 : L'Odyssée Qualiopi</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            100: '#FFFEEC',
+                            300: '#FFF37D',
+                            400: '#FFED3F', // Primary Gold
+                            500: '#FFE922',
+                            600: '#E3D002',
+                            800: '#857802',
+                        },
+                        violet: {
+                            200: '#CCCBFF',
+                            400: '#8F8DE0', // Primary Violet
+                            600: '#6866A3',
+                            800: '#414066',
+                            900: '#2E2D4D',
+                        },
+                        grey: {
+                            50: '#EDEDED',
+                            400: '#999999',
+                            700: '#3B3B3B',
+                            800: '#2A2A2A', // Card BG
+                            900: '#161616', // Main BG
+                            950: '#0D0D0D',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Lato', 'sans-serif'],
+                        header: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            background-color: #161616;
+            color: #EDEDED;
+            font-family: 'Lato', sans-serif;
+        }
+        h1, h2, h3, button {
+            font-family: 'Montserrat', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(42, 42, 42, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(143, 141, 224, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Custom scrollbar for game text */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #161616; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #414066; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6866A3; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Data & Scenarios ---
+        
+        const INITIAL_STATS = {
+            budget: 3000,
+            stress: 0,
+            quality: 50, // "Quality" replaces Reputation/Compliance score
+            day: 1
+        };
+
+        const SCENARIOS = [
+            {
+                id: 'intro',
+                title: "L'Appel de la Formation",
+                text: "Nous sommes en 2025. Le secteur de la formation professionnelle est ultra-régulé mais porteur. Vous avez une expertise unique et l'envie de transmettre. Il est temps de créer votre Organisme de Formation (OF).",
+                subtext: "Votre objectif : Obtenir le NDA, la certification Qualiopi, et lancer votre première session sans faire faillite ni burn-out.",
+                options: [
+                    { label: "C'est parti !", next: 'structure', effect: {} }
+                ]
+            },
+            {
+                id: 'structure',
+                title: "Choix de la Structure",
+                text: "Première étape administrative. Quelle forme juridique choisissez-vous pour votre OF ?",
+                options: [
+                    { 
+                        label: "Micro-entreprise", 
+                        desc: "Rapide, peu coûteux, mais patrimoine non protégé.",
+                        next: 'nda_prep', 
+                        effect: { budget: -50, stress: +10, quality: 0 } 
+                    },
+                    { 
+                        label: "SASU", 
+                        desc: "Plus pro, protège le patrimoine, mais frais de constitution élevés.",
+                        next: 'nda_prep', 
+                        effect: { budget: -600, stress: -5, quality: +10 } 
+                    }
+                ]
+            },
+            {
+                id: 'nda_prep',
+                title: "Dossier NDA",
+                text: "Vous devez obtenir votre Numéro de Déclaration d'Activité auprès de la DREETS. Il faut présenter un premier programme de formation et une convention.",
+                options: [
+                    { 
+                        label: "Utiliser un modèle générique IA", 
+                        desc: "Rapide et gratuit, mais risque de rejet par l'administration.",
+                        next: 'nda_result_risky', 
+                        effect: { budget: 0, stress: -10, quality: -20 } 
+                    },
+                    { 
+                        label: "Rédiger sur mesure (Ingénierie Pédagogique)", 
+                        desc: "Prend des nuits entières, mais solide.",
+                        next: 'nda_result_safe', 
+                        effect: { budget: 0, stress: +25, quality: +20 } 
+                    }
+                ]
+            },
+            {
+                id: 'nda_result_risky',
+                title: "Réponse de la DREETS",
+                text: "La DREETS a tiqué sur votre programme un peu vague. Ils demandent des précisions sur les modalités d'évaluation.",
+                options: [
+                    { 
+                        label: "Corriger en urgence", 
+                        desc: "Vous passez le week-end dessus.",
+                        next: 'qualiopi_choice', 
+                        effect: { budget: 0, stress: +30, quality: +5 } 
+                    }
+                ]
+            },
+            {
+                id: 'nda_result_safe',
+                title: "Réponse de la DREETS",
+                text: "Dossier validé du premier coup ! Votre numéro de déclaration d'activité (NDA) est attribué. Vous existez officiellement.",
+                options: [
+                    { 
+                        label: "Fêter ça (brièvement)", 
+                        next: 'qualiopi_choice', 
+                        effect: { budget: -50, stress: -20, quality: 0 } 
+                    }
+                ]
+            },
+            {
+                id: 'qualiopi_choice',
+                title: "Le Mur Qualiopi",
+                text: "Pour accéder aux fonds publics (CPF, OPCO), la certification Qualiopi est obligatoire. L'audit approche. Comment vous préparez-vous ?",
+                options: [
+                    { 
+                        label: "Solo avec le Guide de Lecture", 
+                        desc: "Gratuit, mais les 32 indicateurs sont un labyrinthe.",
+                        next: 'audit_prep_solo', 
+                        effect: { budget: 0, stress: +40, quality: 0 } 
+                    },
+                    { 
+                        label: "Embaucher un consultant Qualité", 
+                        desc: "Coûteux (1500€), mais assure la conformité.",
+                        next: 'audit_prep_pro', 
+                        effect: { budget: -1500, stress: -20, quality: +30 } 
+                    }
+                ]
+            },
+            {
+                id: 'audit_prep_solo',
+                title: "Nuits Blanches",
+                text: "Vous réalisez qu'il vous manque des processus pour la 'Veille légale et réglementaire' (Indicateurs 23-25).",
+                options: [
+                    { 
+                        label: "S'abonner à une veille payante", 
+                        desc: "Solution rapide.",
+                        next: 'audit_day', 
+                        effect: { budget: -200, stress: -10, quality: +10 } 
+                    },
+                    { 
+                        label: "Bricoler un système RSS", 
+                        desc: "Ça passe ou ça casse.",
+                        next: 'audit_day', 
+                        effect: { budget: 0, stress: +15, quality: -5 } 
+                    }
+                ]
+            },
+            {
+                id: 'audit_prep_pro',
+                title: "Accompagnement Zen",
+                text: "Le consultant a mis en place des process carrés. Il vous suggère d'investir dans un logiciel de gestion OF (Dendreo, Digiforma...).",
+                options: [
+                    { 
+                        label: "Prendre le logiciel", 
+                        desc: "Abonnement mensuel, mais gain de temps énorme.",
+                        next: 'audit_day', 
+                        effect: { budget: -500, stress: -10, quality: +10 } 
+                    },
+                    { 
+                        label: "Rester sur Excel", 
+                        desc: "Économie d'argent, perte de temps.",
+                        next: 'audit_day', 
+                        effect: { budget: 0, stress: +10, quality: -5 } 
+                    }
+                ]
+            },
+            {
+                id: 'audit_day',
+                title: "Le Jour de l'Audit",
+                text: "L'auditeur est là. Il épluche vos dossiers. Il demande à voir la preuve de l'analyse des besoins du bénéficiaire (Indicateur 4).",
+                isAudit: true, // Special logic trigger
+                options: [
+                    { 
+                        label: "Montrer les questionnaires pré-formation", 
+                        next: 'post_audit', 
+                        effect: { budget: 0, stress: +10, quality: 0 } 
+                    }
+                ]
+            },
+            {
+                id: 'post_audit_success',
+                title: "Certifié !",
+                text: "Aucune non-conformité majeure ! Vous êtes certifié Qualiopi pour 3 ans (avec audit de surveillance dans 18 mois). Les financements OPCO sont ouverts !",
+                options: [
+                    { label: "Lancer la commercialisation", next: 'first_session', effect: { quality: +10 } }
+                ]
+            },
+            {
+                id: 'post_audit_failure',
+                title: "Non-conformité Majeure",
+                text: "L'auditeur a relevé une absence de gestion des réclamations. Vous avez 3 mois pour corriger, mais cela retarde tout.",
+                options: [
+                    { label: "Faire les corrections (Coût/Temps)", next: 'first_session', effect: { budget: -200, stress: +20 } }
+                ]
+            },
+            {
+                id: 'first_session',
+                title: "Première Session",
+                text: "Vous avez un client ! Une entreprise veut former 5 salariés. Mais vous êtes épuisé et votre trésorerie est limite.",
+                options: [
+                    { 
+                        label: "Sous-traiter à un formateur", 
+                        desc: "Moins de marge, moins de fatigue.",
+                        next: 'final_report', 
+                        effect: { budget: -800, stress: -20, quality: 0 } 
+                    },
+                    { 
+                        label: "Animer vous-même", 
+                        desc: "Marge 100%, fatigue 100%.",
+                        next: 'final_report', 
+                        effect: { budget: +2000, stress: +30, quality: +5 } 
+                    }
+                ]
+            },
+            {
+                id: 'final_report',
+                title: "Bilan 2025",
+                text: "L'année se termine. C'est l'heure du BPF (Bilan Pédagogique et Financier) sur le portail 'Mon Activité Formation'.",
+                isEnd: true,
+                options: [
+                    { label: "Voir mon score", next: 'end', effect: {} }
+                ]
+            }
+        ];
+
+        // --- Components ---
+
+        const IconCoin = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gold-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 100 2 1 1 0 000-2zm-7 5a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
+            </svg>
+        );
+
+        const IconStress = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-violet-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+            </svg>
+        );
+
+        const IconQuality = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+        );
+
+        const Header = ({ stats }) => {
+            return (
+                <div className="w-full h-16 bg-grey-950 border-b border-grey-800 flex items-center justify-between px-4 md:px-8 z-50">
+                    <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 bg-gold-400 rounded-full flex items-center justify-center font-bold text-grey-900">
+                            OF
+                        </div>
+                        <span className="font-header font-bold text-gold-100 hidden md:block tracking-wider">SIMULATEUR 2025</span>
+                    </div>
+
+                    <div className="flex gap-4 md:gap-8">
+                        <div className="flex flex-col items-center">
+                            <div className="flex items-center gap-1 text-xs uppercase text-grey-400 tracking-widest">Budget</div>
+                            <div className={`flex items-center gap-1 font-bold ${stats.budget < 500 ? 'text-red-500' : 'text-gold-400'}`}>
+                                <IconCoin /> {stats.budget}€
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="flex items-center gap-1 text-xs uppercase text-grey-400 tracking-widest">Stress</div>
+                            <div className="w-24 h-4 bg-grey-800 rounded-full mt-1 relative overflow-hidden border border-grey-700">
+                                <div 
+                                    className={`absolute top-0 left-0 h-full ${stats.stress > 80 ? 'bg-red-500' : 'bg-violet-400'}`} 
+                                    style={{ width: `${Math.min(stats.stress, 100)}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="flex items-center gap-1 text-xs uppercase text-grey-400 tracking-widest">Qualité</div>
+                            <div className="flex items-center gap-1 font-bold text-green-400">
+                                <IconQuality /> {stats.quality}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Card = ({ scenario, onOptionClick }) => {
+            return (
+                <div className="glass-panel w-full max-w-2xl p-8 rounded-xl fade-in flex flex-col gap-6 relative overflow-hidden">
+                    {/* Decorative Top Line */}
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gold-500 via-violet-400 to-gold-500"></div>
+
+                    <div className="flex flex-col gap-2">
+                        <h2 className="text-3xl font-header font-bold text-gold-100">{scenario.title}</h2>
+                        <div className="h-1 w-20 bg-violet-600 rounded-full mb-4"></div>
+                        <p className="text-lg text-grey-50 leading-relaxed font-light">
+                            {scenario.text}
+                        </p>
+                        {scenario.subtext && (
+                            <p className="text-sm text-violet-200 italic border-l-2 border-violet-400 pl-3 mt-2">
+                                {scenario.subtext}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="mt-4 flex flex-col gap-3">
+                        {scenario.options.map((opt, idx) => (
+                            <button 
+                                key={idx}
+                                onClick={() => onOptionClick(opt)}
+                                className="group relative w-full p-4 bg-grey-800 hover:bg-grey-700 border border-grey-700 hover:border-gold-400 rounded-lg text-left transition-all duration-300"
+                            >
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <span className="font-header font-bold text-white group-hover:text-gold-400 transition-colors">
+                                            {opt.label}
+                                        </span>
+                                        {opt.desc && (
+                                            <p className="text-sm text-grey-400 mt-1 font-light">{opt.desc}</p>
+                                        )}
+                                    </div>
+                                    <span className="text-gold-600 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all">
+                                        ➔
+                                    </span>
+                                </div>
+                                {/* Cost Hint */}
+                                {opt.effect && (opt.effect.budget < 0 || opt.effect.stress > 0) && (
+                                    <div className="absolute top-2 right-2 flex gap-2 text-xs opacity-50">
+                                        {opt.effect.budget < 0 && <span className="text-red-400">{opt.effect.budget}€</span>}
+                                        {opt.effect.stress > 0 && <span className="text-violet-300">+{opt.effect.stress} Stress</span>}
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const GameOver = ({ stats, reason, isWin }) => {
+            return (
+                <div className="glass-panel max-w-xl p-10 rounded-2xl text-center fade-in border-t-4 border-t-gold-400">
+                    <h2 className="text-4xl font-header font-bold mb-4 text-white">
+                        {isWin ? "MISSION ACCOMPLIE" : "ÉCHEC CRITIQUE"}
+                    </h2>
+                    <p className="text-xl mb-6 text-grey-200">{reason}</p>
+                    
+                    <div className="grid grid-cols-3 gap-4 mb-8 bg-grey-900 p-4 rounded-lg">
+                        <div>
+                            <div className="text-xs text-grey-500 uppercase">Trésorerie</div>
+                            <div className="text-xl font-bold text-gold-400">{stats.budget}€</div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-grey-500 uppercase">Santé Mentale</div>
+                            <div className={`text-xl font-bold ${stats.stress > 90 ? 'text-red-500' : 'text-violet-400'}`}>
+                                {100 - stats.stress}%
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-grey-500 uppercase">Qualité</div>
+                            <div className="text-xl font-bold text-green-400">{stats.quality}/100</div>
+                        </div>
+                    </div>
+
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="px-8 py-3 bg-gold-400 hover:bg-gold-500 text-black font-bold font-header rounded shadow-lg hover:shadow-gold-400/50 transition-all transform hover:-translate-y-1"
+                    >
+                        Recommencer l'aventure
+                    </button>
+                </div>
+            );
+        };
+
+        const Game = () => {
+            const [currentScenarioId, setCurrentScenarioId] = useState('intro');
+            const [stats, setStats] = useState(INITIAL_STATS);
+            const [gameState, setGameState] = useState('playing'); // playing, win, lose
+            const [endReason, setEndReason] = useState('');
+
+            // Find current scenario object
+            const currentScenario = SCENARIOS.find(s => s.id === currentScenarioId);
+
+            // Handle choice click
+            const handleOptionClick = (option) => {
+                // Apply effects
+                const newStats = {
+                    ...stats,
+                    budget: stats.budget + (option.effect.budget || 0),
+                    stress: stats.stress + (option.effect.stress || 0),
+                    quality: stats.quality + (option.effect.quality || 0),
+                    day: stats.day + 1
+                };
+
+                // Check lose conditions
+                if (newStats.budget < 0) {
+                    setStats(newStats);
+                    setGameState('lose');
+                    setEndReason("Votre trésorerie est à sec. Le tribunal de commerce a prononcé la liquidation.");
+                    return;
+                }
+                if (newStats.stress >= 100) {
+                    setStats(newStats);
+                    setGameState('lose');
+                    setEndReason("Burn-out. Vous ne pouvez plus gérer l'administratif. L'organisme ferme.");
+                    return;
+                }
+
+                // Special Logic for Audit
+                if (currentScenario.isAudit) {
+                    // Check if quality allows passing
+                    if (newStats.quality >= 50) {
+                        setStats(newStats);
+                        setCurrentScenarioId('post_audit_success');
+                        return;
+                    } else {
+                        setStats(newStats);
+                        setCurrentScenarioId('post_audit_failure');
+                        return;
+                    }
+                }
+
+                // Check win condition (end of flow)
+                if (currentScenario.isEnd) {
+                     setStats(newStats);
+                     setGameState('win');
+                     setEndReason(`Félicitations ! Votre OF est opérationnel, certifié Qualiopi, et vous avez survécu à l'année 2025.`);
+                     return;
+                }
+
+                // Proceed
+                setStats(newStats);
+                setCurrentScenarioId(option.next);
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col bg-gradient-to-br from-grey-900 via-grey-950 to-violet-900/20">
+                    <Header stats={stats} />
+                    
+                    <main className="flex-1 flex items-center justify-center p-4 relative">
+                        {/* Background Elements */}
+                        <div className="absolute top-10 left-10 w-64 h-64 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+                        <div className="absolute bottom-10 right-10 w-96 h-96 bg-gold-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                        {gameState === 'playing' && currentScenario && (
+                            <Card 
+                                scenario={currentScenario} 
+                                onOptionClick={handleOptionClick} 
+                            />
+                        )}
+
+                        {gameState !== 'playing' && (
+                            <GameOver 
+                                stats={stats} 
+                                reason={endReason} 
+                                isWin={gameState === 'win'} 
+                            />
+                        )}
+                    </main>
+
+                    <footer className="h-12 border-t border-grey-800 flex items-center justify-center text-grey-600 text-xs gap-4">
+                        <span>v1.0.0</span>
+                        <span>•</span>
+                        <span>OF Simulator 2025</span>
+                        <span>•</span>
+                        <span>Conforme Référentiel National Qualité</span>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Game />);
+    </script>
+</body>
+</html>
