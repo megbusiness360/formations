@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Simulateur Pro : Diagnostic Ongulaire</title>
+
+    
+
+    <!-- Tailwind CSS -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    
+
+    <!-- Fonts -->
+
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+
+    
+
+    <!-- React & ReactDOM -->
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    
+
+    <!-- Babel -->
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+
+
+    <style>
+
+        body {
+
+            font-family: 'Lato', sans-serif;
+
+            background-color: #161616; /* Gris très sombre */
+
+            color: #EDEDED;
+
+        }
+
+        h1, h2, h3, h4, button {
+
+            font-family: 'Montserrat', sans-serif;
+
+        }
+
+        .gold-glow {
+
+            box-shadow: 0 0 15px rgba(255, 237, 63, 0.3);
+
+        }
+
+        .violet-gradient {
+
+            background: linear-gradient(135deg, #1E1E1E 0%, #2e2c49 100%);
+
+        }
+
+        /* Custom Scrollbar */
+
+        ::-webkit-scrollbar {
+
+            width: 8px;
+
+        }
+
+        ::-webkit-scrollbar-track {
+
+            background: #1E1E1E; 
+
+        }
+
+        ::-webkit-scrollbar-thumb {
+
+            background: #555385; 
+
+            border-radius: 4px;
+
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+
+            background: #FFED3F; 
+
+        }
+
+        
+
+        .fade-in {
+
+            animation: fadeIn 0.5s ease-out;
+
+        }
+
+        
+
+        @keyframes fadeIn {
+
+            from { opacity: 0; transform: translateY(10px); }
+
+            to { opacity: 1; transform: translateY(0); }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div id="root"></div>
+
+
+
+    <script type="text/babel">
+
+        const { useState, useEffect } = React;
+
+
+
+        // --- ICONS (SVG Components) ---
+
+        const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>;
+
+        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+
+        const IconEye = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>;
+
+        const IconMessage = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>;
+
+        const IconTool = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>;
+
+        const IconNext = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>;
+
+        const IconAlert = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FEE903" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>;
+
+
+
+        // --- COMPONENTS ---
+
+
+
+        // 1. GAME SHELL
+
+        const GameShell = ({ children, level, maxLevels, score }) => {
+
+            const progress = (level / maxLevels) * 100;
+
+            return (
+
+                <div className="min-h-screen violet-gradient flex items-center justify-center p-4">
+
+                    <div className="w-full max-w-5xl bg-[#161616] rounded-2xl shadow-2xl overflow-hidden border border-[#555385] flex flex-col min-h-[600px]">
+
+                        
+
+                        {/* Header */}
+
+                        <header className="bg-[#0D0D0D] p-4 flex justify-between items-center border-b border-[#2F2C00]">
+
+                            <div className="flex items-center gap-3">
+
+                                <div className="w-8 h-8 rounded-full bg-[#FFED3F] flex items-center justify-center text-black font-bold">P</div>
+
+                                <div>
+
+                                    <h1 className="text-[#EDEDED] font-bold text-lg leading-tight">DIAGNOSTIC PRO</h1>
+
+                                    <p className="text-[#737373] text-xs">Simulation Certifiante</p>
+
+                                </div>
+
+                            </div>
+
+                            <div className="flex items-center gap-6">
+
+                                <div className="flex flex-col items-end">
+
+                                    <span className="text-xs text-[#999999] uppercase tracking-wider">Progression</span>
+
+                                    <div className="w-32 h-2 bg-[#3B3B3B] rounded-full mt-1">
+
+                                        <div 
+
+                                            className="h-full bg-[#FFED3F] rounded-full transition-all duration-500" 
+
+                                            style={{ width: `${progress}%` }}
+
+                                        ></div>
+
+                                    </div>
+
+                                </div>
+
+                                <div className="text-right">
+
+                                    <div className="text-xs text-[#999999]">SCORE</div>
+
+                                    <div className="text-[#FFED3F] font-bold text-xl">{score} pts</div>
+
+                                </div>
+
+                            </div>
+
+                        </header>
+
+
+
+                        {/* Main Content Area */}
+
+                        <main className="flex-1 relative flex flex-col">
+
+                            {children}
+
+                        </main>
+
+
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 2. LEVEL 1: PREPARATION (Drag & Drop simplified to Selection)
+
+        const LevelSetup = ({ onComplete }) => {
+
+            const [items, setItems] = useState([
+
+                { id: 1, name: "Fiche Diagnostic", type: "good", icon: "📋", selected: false },
+
+                { id: 2, name: "Café chaud", type: "bad", icon: "☕", selected: false },
+
+                { id: 3, name: "Désinfectant", type: "good", icon: "✨", selected: false },
+
+                { id: 4, name: "Lampe UV", type: "good", icon: "🔦", selected: false },
+
+                { id: 5, name: "Téléphone perso", type: "bad", icon: "📱", selected: false },
+
+                { id: 6, name: "Stylo", type: "good", icon: "🖊️", selected: false },
+
+                { id: 7, name: "Masque de protection", type: "good", icon: "😷", selected: false },
+
+                { id: 8, name: "Sandwich", type: "bad", icon: "🥪", selected: false },
+
+            ]);
+
+            const [feedback, setFeedback] = useState(null);
+
+
+
+            const toggleItem = (id) => {
+
+                setItems(items.map(item => item.id === id ? { ...item, selected: !item.selected } : item));
+
+                setFeedback(null);
+
+            };
+
+
+
+            const validate = () => {
+
+                const selectedBad = items.filter(i => i.selected && i.type === "bad");
+
+                const selectedGood = items.filter(i => i.selected && i.type === "good");
+
+                const totalGood = items.filter(i => i.type === "good");
+
+
+
+                if (selectedBad.length > 0) {
+
+                    setFeedback({ type: 'error', msg: "Attention ! Retirez les objets personnels ou contaminants (nourriture, téléphone) de la zone de travail." });
+
+                } else if (selectedGood.length < totalGood.length) {
+
+                    setFeedback({ type: 'warning', msg: "Il manque des éléments essentiels pour un diagnostic professionnel (Traçabilité, Hygiène)." });
+
+                } else {
+
+                    setFeedback({ type: 'success', msg: "Parfait ! La table est propre, le matériel est prêt, et les règles d'hygiène sont respectées." });
+
+                    setTimeout(() => onComplete(100), 1500);
+
+                }
+
+            };
+
+
+
+            return (
+
+                <div className="p-8 fade-in h-full flex flex-col">
+
+                    <div className="mb-6 text-center">
+
+                        <h2 className="text-2xl text-[#FFED3F] font-bold mb-2">Étape 1 : Préparation du poste</h2>
+
+                        <p className="text-[#D4D4D4]">Sélectionnez UNIQUEMENT les éléments nécessaires pour mener un entretien de diagnostic professionnel et hygiénique.</p>
+
+                    </div>
+
+
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 content-center">
+
+                        {items.map(item => (
+
+                            <button 
+
+                                key={item.id}
+
+                                onClick={() => toggleItem(item.id)}
+
+                                className={`p-6 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-3
+
+                                    ${item.selected 
+
+                                        ? 'bg-[#555385] border-[#FFED3F] text-white shadow-[0_0_15px_rgba(255,237,63,0.3)]' 
+
+                                        : 'bg-[#1E1E1E] border-[#3B3B3B] text-[#999999] hover:bg-[#2A2A2A] hover:border-[#7C7AC2]'
+
+                                    }`}
+
+                            >
+
+                                <span className="text-4xl">{item.icon}</span>
+
+                                <span className="font-semibold text-sm">{item.name}</span>
+
+                            </button>
+
+                        ))}
+
+                    </div>
+
+
+
+                    {feedback && (
+
+                        <div className={`mt-6 p-4 rounded-lg text-center font-bold ${feedback.type === 'error' ? 'bg-red-900/50 text-red-200' : feedback.type === 'warning' ? 'bg-orange-900/50 text-orange-200' : 'bg-green-900/50 text-green-200'}`}>
+
+                            {feedback.msg}
+
+                        </div>
+
+                    )}
+
+
+
+                    <div className="mt-8 flex justify-center">
+
+                        <button 
+
+                            onClick={validate}
+
+                            className="bg-[#FFED3F] text-black px-8 py-3 rounded-full font-bold text-lg hover:bg-[#FEE903] transition-colors flex items-center gap-2"
+
+                        >
+
+                            Valider la mise en place <IconCheck size={20}/>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 3. LEVEL 2: THE INTERVIEW (Conversation Simulator)
+
+        const LevelInterview = ({ onComplete }) => {
+
+            const [unlockedInfo, setUnlockedInfo] = useState({
+
+                job: false,
+
+                health: false,
+
+                wishes: false
+
+            });
+
+            const [dialogueHistory, setDialogueHistory] = useState([
+
+                { speaker: "system", text: "Votre cliente, Sarah, s'installe. Elle a l'air pressée. Commencez l'enquête." }
+
+            ]);
+
+
+
+            const questions = [
+
+                { id: 'job', label: "Profession & Quotidien", category: "mode de vie", response: "Je suis infirmière aux urgences. Je me lave les mains 50 fois par jour et je porte des gants tout le temps." },
+
+                { id: 'health', label: "Santé & Traitements", category: "médical", response: "Rien de grave, juste un léger diabète que je gère très bien. Ah, et je cicatrise doucement." },
+
+                { id: 'wishes', label: "Attentes Esthétiques", category: "esthétique", response: "Je veux du très long ! Forme Stiletto (pointue). J'ai vu ça sur Instagram, c'est magnifique." },
+
+                { id: 'gossip', label: "Parler de la météo", category: "inutile", response: "Il fait beau, oui... mais pouvons-nous parler de mes ongles ?" },
+
+            ];
+
+
+
+            const askQuestion = (q) => {
+
+                if (q.id === 'gossip') {
+
+                    setDialogueHistory(prev => [...prev, 
+
+                        { speaker: "you", text: "Il fait beau aujourd'hui, non ?" },
+
+                        { speaker: "sarah", text: q.response }
+
+                    ]);
+
+                    return;
+
+                }
+
+
+
+                if (!unlockedInfo[q.id]) {
+
+                    setUnlockedInfo(prev => ({ ...prev, [q.id]: true }));
+
+                    setDialogueHistory(prev => [...prev, 
+
+                        { speaker: "you", text: `Pouvez-vous me parler de votre ${q.category} ?` },
+
+                        { speaker: "sarah", text: q.response }
+
+                    ]);
+
+                }
+
+            };
+
+
+
+            useEffect(() => {
+
+                const chatBox = document.getElementById('chat-box');
+
+                if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+            }, [dialogueHistory]);
+
+
+
+            const checkCompletion = () => {
+
+                if (unlockedInfo.job && unlockedInfo.health && unlockedInfo.wishes) {
+
+                    onComplete(100, unlockedInfo); // Pass gathered info
+
+                }
+
+            };
+
+
+
+            const isComplete = unlockedInfo.job && unlockedInfo.health && unlockedInfo.wishes;
+
+
+
+            return (
+
+                <div className="flex h-full fade-in">
+
+                    {/* Questions Panel */}
+
+                    <div className="w-1/3 bg-[#1E1E1E] border-r border-[#3B3B3B] p-6 flex flex-col gap-4">
+
+                        <h3 className="text-[#FFED3F] font-bold mb-2 uppercase tracking-wide text-sm">Sujets à aborder</h3>
+
+                        {questions.map(q => (
+
+                            <button
+
+                                key={q.id}
+
+                                onClick={() => askQuestion(q)}
+
+                                disabled={unlockedInfo[q.id]}
+
+                                className={`text-left p-4 rounded-lg border transition-all duration-200 flex items-center justify-between
+
+                                    ${unlockedInfo[q.id] 
+
+                                        ? 'bg-[#2A2A2A] border-[#3B3B3B] text-[#555] cursor-default' 
+
+                                        : 'bg-[#2A2A2A] border-[#555385] hover:bg-[#555385] hover:text-white'
+
+                                    }`}
+
+                            >
+
+                                <span className="font-semibold">{q.label}</span>
+
+                                {unlockedInfo[q.id] && <IconCheck size={16} />}
+
+                            </button>
+
+                        ))}
+
+                        
+
+                        <div className="mt-auto">
+
+                            <div className="bg-[#2A2A2A] p-4 rounded-lg mb-4">
+
+                                <h4 className="text-xs text-[#999] uppercase mb-2">Dossier Client</h4>
+
+                                <div className="space-y-2 text-sm">
+
+                                    <div className={`flex items-center gap-2 ${unlockedInfo.job ? 'text-[#FFED3F]' : 'text-[#525252]'}`}>
+
+                                        <div className={`w-2 h-2 rounded-full ${unlockedInfo.job ? 'bg-[#FFED3F]' : 'bg-[#525252]'}`}></div>
+
+                                        Mode de vie (Eau/Gants)
+
+                                    </div>
+
+                                    <div className={`flex items-center gap-2 ${unlockedInfo.health ? 'text-[#FFED3F]' : 'text-[#525252]'}`}>
+
+                                        <div className={`w-2 h-2 rounded-full ${unlockedInfo.health ? 'bg-[#FFED3F]' : 'bg-[#525252]'}`}></div>
+
+                                        Contre-indications (Diabète)
+
+                                    </div>
+
+                                    <div className={`flex items-center gap-2 ${unlockedInfo.wishes ? 'text-[#FFED3F]' : 'text-[#525252]'}`}>
+
+                                        <div className={`w-2 h-2 rounded-full ${unlockedInfo.wishes ? 'bg-[#FFED3F]' : 'bg-[#525252]'}`}></div>
+
+                                        Attentes (Stiletto)
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            
+
+                            {isComplete && (
+
+                                <button 
+
+                                    onClick={checkCompletion}
+
+                                    className="w-full bg-[#FFED3F] text-black py-3 rounded-lg font-bold hover:bg-[#FEE903] animate-pulse"
+
+                                >
+
+                                    Passer au Diagnostic Visuel
+
+                                </button>
+
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+
+                    {/* Chat Area */}
+
+                    <div className="w-2/3 bg-[#0D0D0D] p-6 flex flex-col relative">
+
+                        <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-[#0D0D0D] to-transparent pointer-events-none"></div>
+
+                        <div id="chat-box" className="flex-1 overflow-y-auto space-y-4 py-4 pr-2">
+
+                            {dialogueHistory.map((msg, idx) => (
+
+                                <div key={idx} className={`flex ${msg.speaker === 'you' ? 'justify-end' : 'justify-start'}`}>
+
+                                    <div className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed
+
+                                        ${msg.speaker === 'system' ? 'bg-[#2A2A2A] text-[#999] text-center w-full italic' : 
+
+                                          msg.speaker === 'you' ? 'bg-[#555385] text-white rounded-tr-sm' : 
+
+                                          'bg-[#E8E7FF] text-[#1E1E1E] rounded-tl-sm'}`}>
+
+                                        {msg.speaker !== 'system' && <span className="block text-xs font-bold mb-1 opacity-70 uppercase">{msg.speaker === 'you' ? 'Vous' : 'Sarah (Cliente)'}</span>}
+
+                                        {msg.text}
+
+                                    </div>
+
+                                </div>
+
+                            ))}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 4. LEVEL 3: VISUAL INSPECTION (Interactive SVG)
+
+        const LevelInspection = ({ onComplete }) => {
+
+            const [observations, setObservations] = useState([]);
+
+            const [selectedPart, setSelectedPart] = useState(null);
+
+
+
+            const parts = {
+
+                plate: { id: 'plate', name: "Plaque Ongulaire", issue: "Stries longitudinales marquées", correct: true, feedback: "Ces stries indiquent une fragilité. Il faudra un lissage." },
+
+                cuticle: { id: 'cuticle', name: "Cuticules & Pourtour", issue: "Sèches mais saines, pas d'inflammation", correct: true, feedback: "Aucune paronychie, c'est bon signe." },
+
+                freeedge: { id: 'freeedge', name: "Bord Libre", issue: "Cassant et dédoublé", correct: true, feedback: "Manque de kératine. Nécessite renforcement." },
+
+                skin: { id: 'skin', name: "Peau du doigt", issue: "Normale", correct: false, feedback: "Rien à signaler ici." }
+
+            };
+
+
+
+            const handleInspect = (partId) => {
+
+                setSelectedPart(parts[partId]);
+
+                if (!observations.includes(partId) && parts[partId].correct) {
+
+                    setObservations([...observations, partId]);
+
+                }
+
+            };
+
+
+
+            const finishInspection = () => {
+
+                if (observations.length >= 3) {
+
+                    onComplete(100);
+
+                }
+
+            };
+
+
+
+            return (
+
+                <div className="flex h-full p-8 gap-8 fade-in">
+
+                    <div className="w-1/2 flex items-center justify-center relative bg-[#1E1E1E] rounded-2xl border border-[#3B3B3B]">
+
+                        {/* Interactive Hand SVG */}
+
+                        <svg viewBox="0 0 200 300" className="h-[90%] drop-shadow-2xl">
+
+                            <defs>
+
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+
+                                    <feGaussianBlur stdDeviation="2" result="blur" />
+
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+                                </filter>
+
+                            </defs>
+
+                            
+
+                            {/* Finger Base */}
+
+                            <path 
+
+                                d="M60,280 L60,100 C60,50 140,50 140,100 L140,280 Z" 
+
+                                fill="#D4A88C" 
+
+                                onClick={() => handleInspect('skin')}
+
+                                className="cursor-pointer hover:brightness-110 transition-all"
+
+                            />
+
+                            
+
+                            {/* Nail Plate */}
+
+                            <path 
+
+                                d="M75,100 C75,70 125,70 125,100 L125,180 C125,190 75,190 75,180 Z" 
+
+                                fill="#FADADD" 
+
+                                stroke="#E5B5B5"
+
+                                strokeWidth="1"
+
+                                onClick={() => handleInspect('plate')}
+
+                                className="cursor-pointer hover:fill-[#ffeaea] transition-all"
+
+                            />
+
+                            {/* Striations Effect on Nail */}
+
+                            <path d="M85,90 L85,170" stroke="rgba(0,0,0,0.1)" strokeWidth="1" pointerEvents="none"/>
+
+                            <path d="M95,85 L95,175" stroke="rgba(0,0,0,0.1)" strokeWidth="1" pointerEvents="none"/>
+
+                            <path d="M105,85 L105,175" stroke="rgba(0,0,0,0.1)" strokeWidth="1" pointerEvents="none"/>
+
+                            <path d="M115,90 L115,170" stroke="rgba(0,0,0,0.1)" strokeWidth="1" pointerEvents="none"/>
+
+
+
+                            {/* Cuticle Zone */}
+
+                            <path 
+
+                                d="M73,100 C73,110 127,110 127,100 C127,65 73,65 73,100" 
+
+                                fill="transparent" 
+
+                                stroke="#C68E70" 
+
+                                strokeWidth="4"
+
+                                onClick={() => handleInspect('cuticle')}
+
+                                className="cursor-pointer hover:stroke-[#b07b5e] transition-all"
+
+                                strokeLinecap="round"
+
+                            />
+
+                            
+
+                            {/* Free Edge */}
+
+                            <path 
+
+                                d="M75,180 C75,195 125,195 125,180" 
+
+                                fill="#FFF" 
+
+                                opacity="0.8"
+
+                                onClick={() => handleInspect('freeedge')}
+
+                                className="cursor-pointer hover:opacity-100 transition-all"
+
+                            />
+
+
+
+                            {/* Inspection Markers (appear when clicked) */}
+
+                            {observations.includes('plate') && <circle cx="100" cy="130" r="5" fill="#FFED3F" className="animate-ping"/>}
+
+                            {observations.includes('cuticle') && <circle cx="100" cy="85" r="5" fill="#FFED3F" className="animate-ping"/>}
+
+                            {observations.includes('freeedge') && <circle cx="100" cy="185" r="5" fill="#FFED3F" className="animate-ping"/>}
+
+                        </svg>
+
+                        
+
+                        <div className="absolute bottom-4 text-[#737373] text-sm italic">
+
+                            Cliquez sur les différentes zones de l'ongle pour les analyser.
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div className="w-1/2 flex flex-col gap-4">
+
+                        <h2 className="text-2xl text-[#FFED3F] font-bold">Inspection Visuelle</h2>
+
+                        <p className="text-[#D4D4D4]">Observez minutieusement la main de Sarah. Identifiez 3 anomalies structurelles pour compléter le diagnostic.</p>
+
+                        
+
+                        <div className="flex-1 bg-[#2A2A2A] rounded-xl p-6 border border-[#3B3B3B]">
+
+                            <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+
+                                <IconEye className="text-[#A3A0FF]" /> Rapport d'observation
+
+                            </h3>
+
+                            
+
+                            {selectedPart ? (
+
+                                <div className="space-y-4 fade-in">
+
+                                    <div className="text-lg font-bold text-[#A3A0FF]">{selectedPart.name}</div>
+
+                                    <div className="bg-[#161616] p-4 rounded-lg border-l-4 border-[#FFED3F]">
+
+                                        <div className="text-sm text-[#999] uppercase mb-1">Constat</div>
+
+                                        <div className="text-white">{selectedPart.issue}</div>
+
+                                    </div>
+
+                                    <div className="text-sm text-[#D4D4D4] italic">
+
+                                        "{selectedPart.feedback}"
+
+                                    </div>
+
+                                </div>
+
+                            ) : (
+
+                                <div className="text-[#525252] text-center mt-10">
+
+                                    Sélectionnez une zone sur l'image pour afficher les détails.
+
+                                </div>
+
+                            )}
+
+                        </div>
+
+
+
+                        <div className="bg-[#1E1E1E] p-4 rounded-lg flex justify-between items-center border border-[#3B3B3B]">
+
+                            <span className="text-[#999]">Anomalies trouvées :</span>
+
+                            <div className="flex gap-2">
+
+                                {[1,2,3].map(i => (
+
+                                    <div key={i} className={`w-3 h-3 rounded-full ${i <= observations.length ? 'bg-[#FFED3F]' : 'bg-[#3B3B3B]'}`}></div>
+
+                                ))}
+
+                            </div>
+
+                        </div>
+
+
+
+                        {observations.length >= 3 && (
+
+                            <button 
+
+                                onClick={finishInspection}
+
+                                className="w-full bg-[#FFED3F] text-black py-3 rounded-lg font-bold hover:bg-[#FEE903] transition-colors"
+
+                            >
+
+                                Valider le Diagnostic
+
+                            </button>
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 5. LEVEL 4: FINAL DECISION (Logic Puzzle)
+
+        const LevelDecision = ({ onComplete }) => {
+
+            const [selectedOption, setSelectedOption] = useState(null);
+
+            const [showResult, setShowResult] = useState(false);
+
+
+
+            // Summary of gathered info
+
+            const context = {
+
+                client: "Sarah, Infirmière (lavages fréquents + gants)",
+
+                health: "Diabète léger (cicatrisation lente)",
+
+                nails: "Stries, Bord libre cassant",
+
+                request: "Forme Stiletto (Pointue) Très Longue"
+
+            };
+
+
+
+            const options = [
+
+                {
+
+                    id: 1,
+
+                    title: "Accepter la demande",
+
+                    desc: "Réaliser une pose Stiletto XL en résine.",
+
+                    result: "bad",
+
+                    feedback: "ÉCHEC CRITIQUE. Dangereux ! Le Stiletto est incompatible avec le métier d'infirmière (gants percés, hygiène) et la base est trop fragile pour du XL."
+
+                },
+
+                {
+
+                    id: 2,
+
+                    title: "Refuser catégoriquement",
+
+                    desc: "Renvoyer la cliente car ses ongles sont striés.",
+
+                    result: "poor",
+
+                    feedback: "MAUVAIS SERVICE. Les stries et le diabète stabilisé sont des contre-indications relatives, pas absolues. Vous perdez une cliente."
+
+                },
+
+                {
+
+                    id: 3,
+
+                    title: "Proposer un compromis adapté",
+
+                    desc: "Forme arrondie ou 'Squoval' (compatible gants), longueur courte/moyenne, avec renforcement (Gainage).",
+
+                    result: "perfect",
+
+                    feedback: "EXCELLENT ! C'est la solution professionnelle. Vous respectez l'hygiène, la solidité, et la santé de la cliente tout en embellissant ses mains."
+
+                }
+
+            ];
+
+
+
+            const handleSelect = (opt) => {
+
+                setSelectedOption(opt);
+
+            };
+
+
+
+            const confirmDecision = () => {
+
+                setShowResult(true);
+
+            };
+
+
+
+            const finalize = () => {
+
+                const score = selectedOption.result === 'perfect' ? 100 : selectedOption.result === 'poor' ? 20 : 0;
+
+                onComplete(score, selectedOption.result);
+
+            };
+
+
+
+            if (showResult) {
+
+                return (
+
+                    <div className="flex flex-col items-center justify-center h-full p-8 text-center fade-in">
+
+                        <div className={`text-6xl mb-6 ${selectedOption.result === 'perfect' ? 'text-green-400' : 'text-red-400'}`}>
+
+                            {selectedOption.result === 'perfect' ? '★' : '⚠️'}
+
+                        </div>
+
+                        <h2 className="text-3xl font-bold text-white mb-4">
+
+                            {selectedOption.result === 'perfect' ? 'Diagnostic Validé' : 'Erreur de Jugement'}
+
+                        </h2>
+
+                        <p className="text-xl text-[#D4D4D4] max-w-2xl mb-8 leading-relaxed">
+
+                            {selectedOption.feedback}
+
+                        </p>
+
+                        <button 
+
+                            onClick={finalize}
+
+                            className="bg-[#555385] text-white px-8 py-3 rounded-full hover:bg-[#6866A3] transition-all font-bold"
+
+                        >
+
+                            Voir mon score final
+
+                        </button>
+
+                    </div>
+
+                );
+
+            }
+
+
+
+            return (
+
+                <div className="h-full p-6 flex gap-6 fade-in">
+
+                    {/* Context Recap */}
+
+                    <div className="w-1/3 bg-[#161616] border border-[#2F2C00] rounded-xl p-6 flex flex-col gap-4 shadow-lg">
+
+                        <h3 className="text-[#FFED3F] font-bold text-lg border-b border-[#333] pb-2">Synthèse du Diagnostic</h3>
+
+                        
+
+                        <div className="space-y-4">
+
+                            <div>
+
+                                <div className="text-xs text-[#737373] uppercase">Profil Cliente</div>
+
+                                <div className="text-white font-semibold">{context.client}</div>
+
+                            </div>
+
+                            <div>
+
+                                <div className="text-xs text-[#737373] uppercase">Santé</div>
+
+                                <div className="text-[#FFED3F] font-semibold flex items-center gap-2">
+
+                                    <IconAlert size={14} /> {context.health}
+
+                                </div>
+
+                            </div>
+
+                            <div>
+
+                                <div className="text-xs text-[#737373] uppercase">État des Ongles</div>
+
+                                <div className="text-white font-semibold">{context.nails}</div>
+
+                            </div>
+
+                            <div className="pt-4 border-t border-[#333]">
+
+                                <div className="text-xs text-[#737373] uppercase">Demande Initiale</div>
+
+                                <div className="text-[#A3A0FF] italic">"{context.request}"</div>
+
+                            </div>
+
+                        </div>
+
+                        
+
+                        <div className="mt-auto bg-[#2A2A2A] p-4 rounded-lg text-sm text-[#999]">
+
+                            <span className="font-bold text-white">Mission :</span> Décidez de la prestation à réaliser en tenant compte de la faisabilité technique et des contre-indications.
+
+                        </div>
+
+                    </div>
+
+
+
+                    {/* Choices */}
+
+                    <div className="w-2/3 flex flex-col gap-4">
+
+                        <h2 className="text-2xl text-white font-bold mb-2">Quelle est votre recommandation ?</h2>
+
+                        <div className="flex flex-col gap-3">
+
+                            {options.map(opt => (
+
+                                <button
+
+                                    key={opt.id}
+
+                                    onClick={() => handleSelect(opt)}
+
+                                    className={`text-left p-6 rounded-xl border-2 transition-all duration-200 group relative overflow-hidden
+
+                                        ${selectedOption?.id === opt.id 
+
+                                            ? 'bg-[#555385] border-[#FFED3F] shadow-lg transform scale-[1.02]' 
+
+                                            : 'bg-[#1E1E1E] border-[#3B3B3B] hover:bg-[#2A2A2A] hover:border-[#7C7AC2]'
+
+                                        }`}
+
+                                >
+
+                                    <div className="relative z-10">
+
+                                        <h4 className={`text-lg font-bold mb-1 ${selectedOption?.id === opt.id ? 'text-white' : 'text-[#D4D4D4] group-hover:text-white'}`}>{opt.title}</h4>
+
+                                        <p className={`text-sm ${selectedOption?.id === opt.id ? 'text-gray-200' : 'text-[#737373]'}`}>{opt.desc}</p>
+
+                                    </div>
+
+                                </button>
+
+                            ))}
+
+                        </div>
+
+
+
+                        <button 
+
+                            onClick={confirmDecision}
+
+                            disabled={!selectedOption}
+
+                            className={`mt-4 py-4 rounded-lg font-bold text-lg transition-all
+
+                                ${selectedOption 
+
+                                    ? 'bg-[#FFED3F] text-black hover:bg-[#FEE903] shadow-[0_0_20px_rgba(255,237,63,0.4)]' 
+
+                                    : 'bg-[#3B3B3B] text-[#737373] cursor-not-allowed'
+
+                                }`}
+
+                        >
+
+                            Valider la décision
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 6. MAIN GAME CONTROLLER
+
+        const Game = () => {
+
+            const [level, setLevel] = useState(0); // 0: Intro, 1: Setup, 2: Interview, 3: Inspection, 4: Decision, 5: End
+
+            const [totalScore, setTotalScore] = useState(0);
+
+            
+
+            const handleLevelComplete = (scoreToAdd) => {
+
+                setTotalScore(prev => prev + scoreToAdd);
+
+                setLevel(prev => prev + 1);
+
+            };
+
+
+
+            const restart = () => {
+
+                setLevel(0);
+
+                setTotalScore(0);
+
+            };
+
+
+
+            // Intro Screen
+
+            if (level === 0) {
+
+                return (
+
+                    <div className="min-h-screen bg-[#161616] flex items-center justify-center p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+
+                        <div className="max-w-2xl w-full text-center space-y-8 p-10 bg-[#1E1E1E] bg-opacity-95 rounded-3xl border border-[#FFED3F] shadow-[0_0_50px_rgba(85,83,133,0.2)]">
+
+                            <div className="w-20 h-20 bg-[#FFED3F] rounded-full flex items-center justify-center text-4xl font-bold text-black mx-auto shadow-[0_0_20px_rgba(255,237,63,0.5)]">
+
+                                P
+
+                            </div>
+
+                            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight uppercase">
+
+                                Diagnostic <span className="text-[#A3A0FF]">Ongulaire</span>
+
+                            </h1>
+
+                            <p className="text-lg text-[#D4D4D4] leading-relaxed font-light">
+
+                                L'entretien de diagnostic est la clé d'une prestation réussie. 
+
+                                Vous allez recevoir votre première cliente. 
+
+                                <br/><br/>
+
+                                <strong className="text-white">Objectifs :</strong> Préparer le poste, interroger la cliente, analyser ses ongles et proposer la bonne prestation.
+
+                            </p>
+
+                            <button 
+
+                                onClick={() => setLevel(1)}
+
+                                className="bg-[#555385] text-white text-xl font-bold py-4 px-12 rounded-full hover:bg-[#FFED3F] hover:text-black transition-all duration-300 transform hover:scale-105 shadow-lg"
+
+                            >
+
+                                Commencer la simulation
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                );
+
+            }
+
+
+
+            // End Screen
+
+            if (level === 5) {
+
+                return (
+
+                    <GameShell level={4} maxLevels={4} score={totalScore}>
+
+                        <div className="h-full flex flex-col items-center justify-center text-center p-8 fade-in">
+
+                            <h2 className="text-4xl font-bold text-white mb-2">Simulation Terminée</h2>
+
+                            <div className="text-[#FFED3F] text-6xl font-black mb-6">{totalScore} / 400 pts</div>
+
+                            
+
+                            <div className="bg-[#2A2A2A] p-6 rounded-xl max-w-lg w-full mb-8 text-left space-y-4 border border-[#3B3B3B]">
+
+                                <h3 className="text-[#A3A0FF] font-bold uppercase text-sm border-b border-[#555] pb-2">Récapitulatif des compétences</h3>
+
+                                <div className="flex justify-between text-[#D4D4D4]">
+
+                                    <span>Préparation & Hygiène</span>
+
+                                    <span className="text-green-400">Acquis</span>
+
+                                </div>
+
+                                <div className="flex justify-between text-[#D4D4D4]">
+
+                                    <span>Écoute & Analyse</span>
+
+                                    <span className="text-green-400">Acquis</span>
+
+                                </div>
+
+                                <div className="flex justify-between text-[#D4D4D4]">
+
+                                    <span>Diagnostic Visuel</span>
+
+                                    <span className="text-green-400">Acquis</span>
+
+                                </div>
+
+                                <div className="flex justify-between text-[#D4D4D4]">
+
+                                    <span>Conseil & Sécurité</span>
+
+                                    <span className={totalScore === 400 ? "text-green-400" : "text-yellow-500"}>{totalScore === 400 ? "Expert" : "À renforcer"}</span>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <button 
+
+                                onClick={restart}
+
+                                className="text-[#737373] hover:text-white underline transition-colors"
+
+                            >
+
+                                Recommencer la formation
+
+                            </button>
+
+                        </div>
+
+                    </GameShell>
+
+                );
+
+            }
+
+
+
+            // Active Game Levels
+
+            return (
+
+                <GameShell level={level} maxLevels={4} score={totalScore}>
+
+                    {level === 1 && <LevelSetup onComplete={handleLevelComplete} />}
+
+                    {level === 2 && <LevelInterview onComplete={handleLevelComplete} />}
+
+                    {level === 3 && <LevelInspection onComplete={handleLevelComplete} />}
+
+                    {level === 4 && <LevelDecision onComplete={handleLevelComplete} />}
+
+                </GameShell>
+
+            );
+
+        };
+
+
+
+        // RENDER
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+
+        root.render(<Game />);
+
+    </script>
+
+</body>
+
+</html>
