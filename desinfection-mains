@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Simulateur Expert : Hygiène & Désinfection</title>
+
+    
+
+    <!-- Tailwind CSS -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    
+
+    <!-- Fonts -->
+
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+
+    
+
+    <!-- React & ReactDOM -->
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    
+
+    <!-- Babel -->
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+
+
+    <style>
+
+        body {
+
+            font-family: 'Lato', sans-serif;
+
+            background-color: #161616;
+
+            color: #EDEDED;
+
+            overflow-x: hidden;
+
+        }
+
+        h1, h2, h3, h4, button {
+
+            font-family: 'Montserrat', sans-serif;
+
+        }
+
+        .violet-gradient {
+
+            background: linear-gradient(135deg, #1E1E1E 0%, #2e2c49 100%);
+
+        }
+
+        .gold-text {
+
+            color: #FFED3F;
+
+        }
+
+        .gold-border {
+
+            border-color: #FFED3F;
+
+        }
+
+        .gold-bg {
+
+            background-color: #FFED3F;
+
+            color: #000;
+
+        }
+
+        /* Animations */
+
+        @keyframes pulse-gold {
+
+            0%, 100% { box-shadow: 0 0 5px rgba(255, 237, 63, 0.2); }
+
+            50% { box-shadow: 0 0 20px rgba(255, 237, 63, 0.6); }
+
+        }
+
+        .animate-gold-pulse {
+
+            animation: pulse-gold 2s infinite;
+
+        }
+
+        .fade-in {
+
+            animation: fadeIn 0.5s ease-out forwards;
+
+        }
+
+        @keyframes fadeIn {
+
+            from { opacity: 0; transform: translateY(10px); }
+
+            to { opacity: 1; transform: translateY(0); }
+
+        }
+
+        
+
+        /* Drag & Drop Styles */
+
+        .draggable-item {
+
+            cursor: grab;
+
+            transition: all 0.2s;
+
+        }
+
+        .draggable-item:active {
+
+            cursor: grabbing;
+
+            transform: scale(1.05);
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div id="root"></div>
+
+
+
+    <script type="text/babel">
+
+        const { useState, useEffect } = React;
+
+
+
+        // --- ICONS (SVG) ---
+
+        const IconWater = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>; // Generic placeholder replaced below
+
+        const IconHand = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>;
+
+        const IconSoap = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 21h10"/><rect x="5" y="7" width="14" height="14" rx="2"/><path d="M9 7V3h6v4"/></svg>;
+
+        const IconGel = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6v5H9z"/><path d="M14 8v13H10V8"/><path d="M16 8h2a2 2 0 0 1 2 2v11H4V10a2 2 0 0 1 2-2h2"/></svg>;
+
+        const IconCheck = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+
+        const IconWarning = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+
+        const IconTrash = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
+
+
+
+        // --- COMPONENTS ---
+
+
+
+        // 1. GAME SHELL (Container Principal)
+
+        const GameShell = ({ children, level, maxLevels, score }) => {
+
+            const progress = ((level - 1) / maxLevels) * 100;
+
+            return (
+
+                <div className="min-h-screen violet-gradient flex items-center justify-center p-4">
+
+                    <div className="w-full max-w-6xl bg-[#161616] rounded-3xl shadow-2xl overflow-hidden border border-[#555385] flex flex-col min-h-[650px]">
+
+                        
+
+                        {/* HUD / Header */}
+
+                        <header className="bg-[#0D0D0D] p-5 flex justify-between items-center border-b border-[#2F2C00] relative">
+
+                            <div className="absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFED3F] to-transparent w-full opacity-50"></div>
+
+                            
+
+                            <div className="flex items-center gap-4">
+
+                                <div className="w-10 h-10 rounded-lg bg-[#FFED3F] text-black flex items-center justify-center font-bold text-xl shadow-[0_0_15px_rgba(255,237,63,0.4)]">
+
+                                    H
+
+                                </div>
+
+                                <div>
+
+                                    <h1 className="text-white font-bold text-lg tracking-wide uppercase">Hygiène & Aseptie</h1>
+
+                                    <p className="text-[#737373] text-xs font-mono">Module C3/C4 - Expert</p>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <div className="flex items-center gap-8">
+
+                                <div className="hidden md:flex flex-col items-end">
+
+                                    <span className="text-[10px] text-[#999] uppercase tracking-widest mb-1">Progression</span>
+
+                                    <div className="w-48 h-1.5 bg-[#3B3B3B] rounded-full overflow-hidden">
+
+                                        <div 
+
+                                            className="h-full bg-[#FFED3F] transition-all duration-700 ease-out" 
+
+                                            style={{ width: `${Math.max(5, progress)}%` }}
+
+                                        ></div>
+
+                                    </div>
+
+                                </div>
+
+                                <div className="bg-[#1E1E1E] px-4 py-2 rounded-lg border border-[#3B3B3B] flex flex-col items-center min-w-[100px]">
+
+                                    <span className="text-[10px] text-[#737373] uppercase">Score</span>
+
+                                    <span className="text-[#FFED3F] font-bold text-xl font-mono">{score} pts</span>
+
+                                </div>
+
+                            </div>
+
+                        </header>
+
+
+
+                        {/* Content */}
+
+                        <main className="flex-1 relative flex flex-col overflow-hidden">
+
+                            {children}
+
+                        </main>
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 2. LEVEL 1: PREPARATION PERSONNELLE (Interactive Image Clicker)
+
+        const LevelPreparation = ({ onComplete }) => {
+
+            const [errors, setErrors] = useState([
+
+                { id: 'ring', label: "Bague", x: 40, y: 60, found: false },
+
+                { id: 'watch', label: "Montre", x: 25, y: 75, found: false },
+
+                { id: 'nails', label: "Ongles Longs", x: 65, y: 30, found: false },
+
+                { id: 'bracelet', label: "Bracelet", x: 30, y: 70, found: false }
+
+            ]);
+
+            
+
+            const [workspaceItems, setWorkspaceItems] = useState([
+
+                { id: 'soap', name: "Savon Doux", type: 'required', present: false, icon: <IconSoap /> },
+
+                { id: 'gel', name: "Gel Hydro.", type: 'required', present: false, icon: <IconGel /> },
+
+                { id: 'towel', name: "Essuie-tout", type: 'required', present: false, icon: "🧻" },
+
+                { id: 'jewelrybox', name: "Boîte Bijoux", type: 'optional', present: false, icon: "💍" }
+
+            ]);
+
+
+
+            const [step, setStep] = useState(1); // 1: Clean Hands, 2: Setup Workspace
+
+
+
+            const handleHandClick = (id) => {
+
+                setErrors(prev => prev.map(err => err.id === id ? { ...err, found: true } : err));
+
+            };
+
+
+
+            const toggleWorkspaceItem = (id) => {
+
+                setWorkspaceItems(prev => prev.map(item => item.id === id ? { ...item, present: !item.present } : item));
+
+            };
+
+
+
+            const validateHands = () => {
+
+                if (errors.every(e => e.found)) {
+
+                    setStep(2);
+
+                }
+
+            };
+
+
+
+            const validateWorkspace = () => {
+
+                const required = workspaceItems.filter(i => i.type === 'required' && i.present);
+
+                if (required.length === 3) {
+
+                    onComplete(100);
+
+                }
+
+            };
+
+
+
+            return (
+
+                <div className="flex flex-col h-full fade-in">
+
+                    <div className="bg-[#1E1E1E] p-4 text-center border-b border-[#3B3B3B]">
+
+                        <h2 className="text-[#FFED3F] text-xl font-bold uppercase">
+
+                            {step === 1 ? "Phase 1 : Préparation du Professionnel" : "Phase 2 : Organisation du Poste"}
+
+                        </h2>
+
+                        <p className="text-[#999] text-sm mt-1">
+
+                            {step === 1 ? "Cliquez sur les éléments interdits sur vos propres mains." : "Sélectionnez le matériel indispensable pour l'hygiène."}
+
+                        </p>
+
+                    </div>
+
+
+
+                    <div className="flex-1 flex items-center justify-center p-8 bg-[#0D0D0D] relative overflow-hidden">
+
+                        {step === 1 ? (
+
+                            <div className="relative w-[300px] h-[400px]">
+
+                                {/* Abstract Hand Graphic */}
+
+                                <svg viewBox="0 0 200 300" className="w-full h-full drop-shadow-2xl">
+
+                                    <path d="M60,300 L60,150 C60,100 140,100 140,150 L140,300 Z" fill="#D4A88C" />
+
+                                    <path d="M50,150 C40,100 50,50 70,30 L90,130" fill="none" stroke="#D4A88C" strokeWidth="20" strokeLinecap="round" /> {/* Thumb */}
+
+                                    <path d="M90,130 L90,20 C90,0 110,0 110,20 L110,130" fill="none" stroke="#D4A88C" strokeWidth="18" strokeLinecap="round" /> {/* Index */}
+
+                                    <path d="M115,130 L115,10 C115,-10 135,-10 135,10 L135,130" fill="none" stroke="#D4A88C" strokeWidth="18" strokeLinecap="round" /> {/* Middle */}
+
+                                    
+
+                                    {/* ERRORS TO CLICK */}
+
+                                    {!errors.find(e => e.id === 'ring').found && (
+
+                                        <circle cx="115" cy="90" r="10" stroke="gold" strokeWidth="4" fill="transparent" 
+
+                                            onClick={() => handleHandClick('ring')} className="cursor-pointer hover:stroke-white animate-pulse" />
+
+                                    )}
+
+                                    {!errors.find(e => e.id === 'watch').found && (
+
+                                        <rect x="50" y="250" width="100" height="20" fill="#333" stroke="silver" strokeWidth="2"
+
+                                            onClick={() => handleHandClick('watch')} className="cursor-pointer hover:fill-[#555]" />
+
+                                    )}
+
+                                    {!errors.find(e => e.id === 'bracelet').found && (
+
+                                        <path d="M50,230 Q100,240 150,230" stroke="gold" strokeWidth="3" fill="none"
+
+                                            onClick={() => handleHandClick('bracelet')} className="cursor-pointer hover:stroke-white" />
+
+                                    )}
+
+                                    {!errors.find(e => e.id === 'nails').found && (
+
+                                        <path d="M110,10 L110,0 Q125,-5 140,0 L140,10" fill="#FFB6C1"
+
+                                            onClick={() => handleHandClick('nails')} className="cursor-pointer hover:fill-red-500" />
+
+                                    )}
+
+                                </svg>
+
+                                <div className="absolute bottom-0 w-full text-center">
+
+                                    <p className="text-[#737373] text-sm">Elements restants : {errors.filter(e => !e.found).length}</p>
+
+                                </div>
+
+                            </div>
+
+                        ) : (
+
+                            <div className="grid grid-cols-2 gap-6 max-w-2xl w-full">
+
+                                {workspaceItems.map(item => (
+
+                                    <button
+
+                                        key={item.id}
+
+                                        onClick={() => toggleWorkspaceItem(item.id)}
+
+                                        className={`p-6 rounded-xl border-2 flex flex-col items-center gap-3 transition-all duration-300
+
+                                            ${item.present 
+
+                                                ? 'bg-[#555385] border-[#FFED3F] text-white shadow-[0_0_15px_rgba(255,237,63,0.3)]' 
+
+                                                : 'bg-[#1E1E1E] border-[#3B3B3B] text-[#737373] hover:border-[#7C7AC2]'
+
+                                            }`}
+
+                                    >
+
+                                        <div className="text-4xl">{item.icon}</div>
+
+                                        <span className="font-bold">{item.name}</span>
+
+                                    </button>
+
+                                ))}
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+
+
+                    <div className="p-6 bg-[#161616] border-t border-[#3B3B3B] flex justify-center">
+
+                        {step === 1 ? (
+
+                            <button 
+
+                                onClick={validateHands}
+
+                                disabled={errors.some(e => !e.found)}
+
+                                className={`px-8 py-3 rounded-full font-bold text-lg transition-all
+
+                                    ${errors.some(e => !e.found) 
+
+                                        ? 'bg-[#2A2A2A] text-[#555] cursor-not-allowed' 
+
+                                        : 'bg-[#FFED3F] text-black hover:bg-[#FEE903]'}`}
+
+                            >
+
+                                Mains Assainies → Suivant
+
+                            </button>
+
+                        ) : (
+
+                            <button 
+
+                                onClick={validateWorkspace}
+
+                                className="px-8 py-3 rounded-full font-bold text-lg bg-[#FFED3F] text-black hover:bg-[#FEE903]"
+
+                            >
+
+                                Valider le Poste
+
+                            </button>
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 3. LEVEL 2: THE METHOD (Scenario Decision)
+
+        const LevelMethod = ({ onComplete }) => {
+
+            const [currentScenario, setCurrentScenario] = useState(0);
+
+            const [feedback, setFeedback] = useState(null);
+
+
+
+            const scenarios = [
+
+                {
+
+                    id: 1,
+
+                    text: "Votre cliente arrive. Elle vous dit : 'Désolée pour le retard, j'ai dû courir après le métro et tenir la barre bien fort !'",
+
+                    condition: "Mains potentiellement souillées (transports)",
+
+                    correct: "wash", // Lavage simple
+
+                    explanation: "Correct ! Retour de l'extérieur/transports = Lavage obligatoire avant désinfection."
+
+                },
+
+                {
+
+                    id: 2,
+
+                    text: "Vous venez de terminer le limage de la main gauche. Vous allez passer à la main droite.",
+
+                    condition: "Mains visuellement propres, en cours de prestation",
+
+                    correct: "gel", // Friction
+
+                    explanation: "Bien joué. Sur mains propres et sèches en cours de soin, la friction suffit et gagne du temps."
+
+                },
+
+                {
+
+                    id: 3,
+
+                    text: "La cliente a appliqué une crème hydratante juste avant d'entrer 'pour ne pas avoir les mains sèches'.",
+
+                    condition: "Présence de corps gras",
+
+                    correct: "wash",
+
+                    explanation: "Exact. Le gel ne traverse pas le gras. Il faut laver pour éliminer la crème d'abord."
+
+                }
+
+            ];
+
+
+
+            const handleChoice = (choice) => {
+
+                const scenario = scenarios[currentScenario];
+
+                const isCorrect = choice === scenario.correct;
+
+
+
+                setFeedback({
+
+                    correct: isCorrect,
+
+                    text: isCorrect ? scenario.explanation : "Erreur. Relisez la règle : Lavage si souillure/gras/extérieur, Gel si mains propres/sèches."
+
+                });
+
+            };
+
+
+
+            const nextScenario = () => {
+
+                setFeedback(null);
+
+                if (currentScenario < scenarios.length - 1) {
+
+                    setCurrentScenario(prev => prev + 1);
+
+                } else {
+
+                    onComplete(100);
+
+                }
+
+            };
+
+
+
+            const scenario = scenarios[currentScenario];
+
+
+
+            return (
+
+                <div className="h-full flex flex-col p-8 fade-in">
+
+                    <div className="text-center mb-8">
+
+                        <h2 className="text-2xl text-[#FFED3F] font-bold mb-2">Décision Rapide : Lavage ou Friction ?</h2>
+
+                        <p className="text-[#D4D4D4]">Analysez la situation et choisissez la méthode la plus adaptée.</p>
+
+                    </div>
+
+
+
+                    <div className="flex-1 flex flex-col items-center justify-center max-w-3xl mx-auto w-full gap-8">
+
+                        
+
+                        {/* Scenario Card */}
+
+                        <div className="bg-[#1E1E1E] border border-[#555385] p-8 rounded-2xl w-full text-center shadow-lg relative overflow-hidden">
+
+                            <div className="absolute top-0 left-0 w-2 h-full bg-[#FFED3F]"></div>
+
+                            <div className="text-[#737373] uppercase text-xs font-bold tracking-widest mb-4">Situation {currentScenario + 1} / 3</div>
+
+                            <p className="text-xl text-white font-medium mb-4">"{scenario.text}"</p>
+
+                            <div className="inline-block bg-[#2A2A2A] px-3 py-1 rounded text-xs text-[#A3A0FF] border border-[#3B3B3B]">
+
+                                Condition : {scenario.condition}
+
+                            </div>
+
+                        </div>
+
+
+
+                        {/* Choices */}
+
+                        {!feedback ? (
+
+                            <div className="grid grid-cols-2 gap-6 w-full">
+
+                                <button 
+
+                                    onClick={() => handleChoice('wash')}
+
+                                    className="group p-6 bg-[#2A2A2A] rounded-xl border border-[#3B3B3B] hover:border-[#FFED3F] hover:bg-[#333] transition-all flex flex-col items-center gap-4"
+
+                                >
+
+                                    <div className="w-16 h-16 bg-[#161616] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+
+                                        <IconSoap />
+
+                                    </div>
+
+                                    <div className="text-center">
+
+                                        <h3 className="text-white font-bold text-lg">Lavage Simple</h3>
+
+                                        <p className="text-[#737373] text-sm">Eau + Savon (1 min)</p>
+
+                                    </div>
+
+                                </button>
+
+
+
+                                <button 
+
+                                    onClick={() => handleChoice('gel')}
+
+                                    className="group p-6 bg-[#2A2A2A] rounded-xl border border-[#3B3B3B] hover:border-[#A3A0FF] hover:bg-[#333] transition-all flex flex-col items-center gap-4"
+
+                                >
+
+                                    <div className="w-16 h-16 bg-[#161616] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+
+                                        <IconGel />
+
+                                    </div>
+
+                                    <div className="text-center">
+
+                                        <h3 className="text-white font-bold text-lg">Friction Hydro.</h3>
+
+                                        <p className="text-[#737373] text-sm">Gel (30 sec)</p>
+
+                                    </div>
+
+                                </button>
+
+                            </div>
+
+                        ) : (
+
+                            <div className={`w-full p-6 rounded-xl border ${feedback.correct ? 'bg-green-900/30 border-green-500' : 'bg-red-900/30 border-red-500'} text-center animate-in zoom-in duration-300`}>
+
+                                <div className={`text-2xl font-bold mb-2 ${feedback.correct ? 'text-green-400' : 'text-red-400'}`}>
+
+                                    {feedback.correct ? "Excellent !" : "Incorrect"}
+
+                                </div>
+
+                                <p className="text-white mb-6">{feedback.text}</p>
+
+                                <button 
+
+                                    onClick={nextScenario}
+
+                                    className="bg-[#FFED3F] text-black px-8 py-3 rounded-full font-bold hover:bg-[#FEE903]"
+
+                                >
+
+                                    Continuer
+
+                                </button>
+
+                            </div>
+
+                        )}
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 4. LEVEL 3: SEQUENCE (Drag & Drop Logic - Simplified for React UMD without dnd libs)
+
+        const LevelSequence = ({ onComplete }) => {
+
+            // Steps scrambled
+
+            const correctOrder = [1, 2, 3, 4, 5, 6];
+
+            const [steps, setSteps] = useState([
+
+                { id: 3, text: "Espaces Interdigitaux", icon: "🖐️" },
+
+                { id: 1, text: "Mouiller & Savonner", icon: "🧼" },
+
+                { id: 6, text: "Rincer & Sécher", icon: "🧻" },
+
+                { id: 2, text: "Paumes & Dos", icon: "👏" },
+
+                { id: 5, text: "Poignets", icon: "💪" },
+
+                { id: 4, text: "Pouces & Ongles", icon: "👍" }
+
+            ]);
+
+            const [selection, setSelection] = useState([]);
+
+
+
+            const handleSelect = (step) => {
+
+                if (selection.find(s => s.id === step.id)) return;
+
+                setSelection([...selection, step]);
+
+                setSteps(steps.filter(s => s.id !== step.id));
+
+            };
+
+
+
+            const handleReset = () => {
+
+                setSteps([
+
+                    { id: 3, text: "Espaces Interdigitaux", icon: "🖐️" },
+
+                    { id: 1, text: "Mouiller & Savonner", icon: "🧼" },
+
+                    { id: 6, text: "Rincer & Sécher", icon: "🧻" },
+
+                    { id: 2, text: "Paumes & Dos", icon: "👏" },
+
+                    { id: 5, text: "Poignets", icon: "💪" },
+
+                    { id: 4, text: "Pouces & Ongles", icon: "👍" }
+
+                ]);
+
+                setSelection([]);
+
+            };
+
+
+
+            const checkOrder = () => {
+
+                const currentIds = selection.map(s => s.id);
+
+                if (JSON.stringify(currentIds) === JSON.stringify(correctOrder)) {
+
+                    onComplete(100);
+
+                } else {
+
+                    alert("Ordre incorrect. Rappelez-vous : On commence par mouiller, on finit par sécher, et on va du général (paumes) au particulier (ongles/pouces).");
+
+                    handleReset();
+
+                }
+
+            };
+
+
+
+            return (
+
+                <div className="flex h-full p-8 gap-8 fade-in">
+
+                    <div className="w-1/2 flex flex-col gap-4">
+
+                        <h2 className="text-[#FFED3F] font-bold text-xl">Banque d'actions</h2>
+
+                        <p className="text-sm text-[#999]">Cliquez sur les étapes dans l'ordre chronologique du protocole de lavage.</p>
+
+                        
+
+                        <div className="grid grid-cols-2 gap-4">
+
+                            {steps.map(step => (
+
+                                <button
+
+                                    key={step.id}
+
+                                    onClick={() => handleSelect(step)}
+
+                                    className="bg-[#2A2A2A] border border-[#3B3B3B] p-4 rounded-xl text-left hover:bg-[#333] hover:border-[#A3A0FF] transition-all flex items-center gap-3"
+
+                                >
+
+                                    <span className="text-2xl">{step.icon}</span>
+
+                                    <span className="font-semibold text-white">{step.text}</span>
+
+                                </button>
+
+                            ))}
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div className="w-1/2 bg-[#1E1E1E] rounded-2xl border border-[#3B3B3B] p-6 flex flex-col">
+
+                        <div className="flex justify-between items-center mb-4">
+
+                            <h3 className="text-white font-bold">Votre Protocole</h3>
+
+                            <button onClick={handleReset} className="text-xs text-[#FFED3F] hover:underline">Réinitialiser</button>
+
+                        </div>
+
+
+
+                        <div className="flex-1 space-y-3 relative">
+
+                            {/* Placeholder slots */}
+
+                            {correctOrder.map((_, idx) => (
+
+                                <div key={idx} className="absolute w-full h-12 border-2 border-dashed border-[#333] rounded-lg top-0" style={{ top: `${idx * 3.5}rem`, zIndex: 0 }}>
+
+                                    <span className="absolute left-2 top-2 text-[#333] font-bold text-xl opacity-50">{idx + 1}</span>
+
+                                </div>
+
+                            ))}
+
+
+
+                            {/* Selected Items */}
+
+                            {selection.map((step, idx) => (
+
+                                <div key={step.id} className="relative z-10 bg-[#555385] text-white p-3 rounded-lg shadow-md flex items-center gap-3 animate-in slide-in-from-left duration-300">
+
+                                    <div className="bg-[#1E1E1E] w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">{idx + 1}</div>
+
+                                    <span>{step.text}</span>
+
+                                </div>
+
+                            ))}
+
+                        </div>
+
+
+
+                        <button 
+
+                            onClick={checkOrder}
+
+                            disabled={selection.length !== 6}
+
+                            className={`w-full py-4 rounded-lg font-bold mt-4 transition-colors
+
+                                ${selection.length === 6 
+
+                                    ? 'bg-[#FFED3F] text-black hover:bg-[#FEE903]' 
+
+                                    : 'bg-[#2A2A2A] text-[#555] cursor-not-allowed'}`}
+
+                        >
+
+                            Valider le Protocole
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 5. LEVEL 4: INSPECTION (Heatmap)
+
+        const LevelInspection = ({ onComplete }) => {
+
+            const [foundZones, setFoundZones] = useState([]);
+
+            
+
+            const zones = [
+
+                { id: 'thumb', x: 25, y: 50, r: 15, name: "Pouces & Base" },
+
+                { id: 'nails', x: 50, y: 20, r: 15, name: "Sous les ongles" },
+
+                { id: 'wrist', x: 50, y: 85, r: 15, name: "Poignets" }
+
+            ];
+
+
+
+            const handleClick = (e) => {
+
+                const rect = e.target.getBoundingClientRect();
+
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+
+
+                zones.forEach(zone => {
+
+                    // Simple distance check logic would go here, simplified to direct mapping for this demo
+
+                });
+
+            };
+
+
+
+            const toggleZone = (id) => {
+
+                if (!foundZones.includes(id)) {
+
+                    setFoundZones([...foundZones, id]);
+
+                }
+
+            };
+
+
+
+            useEffect(() => {
+
+                if (foundZones.length === 3) {
+
+                    setTimeout(() => onComplete(100), 1000);
+
+                }
+
+            }, [foundZones]);
+
+
+
+            return (
+
+                <div className="h-full flex flex-col items-center justify-center p-8 fade-in text-center">
+
+                    <h2 className="text-2xl text-[#FFED3F] font-bold mb-2">Zone de Vigilance</h2>
+
+                    <p className="text-[#D4D4D4] mb-8">Après un lavage rapide, quelles sont les 3 zones les plus souvent OUBILIÉES ?<br/>Cliquez sur la main thermique pour les révéler.</p>
+
+
+
+                    <div className="relative w-[300px] h-[400px]">
+
+                        {/* Thermal Hand Graphic */}
+
+                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
+
+                            {/* Hand Silhouette */}
+
+                            <path d="M40,90 L40,50 L25,40 Q20,35 30,30 L40,45 L40,20 Q40,10 50,10 Q60,10 60,20 L60,45 L65,25 Q65,15 75,15 Q85,15 85,25 L85,50 L85,90 Z" 
+
+                                  fill="#2A2A2A" stroke="#555" strokeWidth="1" />
+
+                            
+
+                            {/* Hidden Zones (Clickable) */}
+
+                            {/* Thumb Base */}
+
+                            <circle cx="30" cy="45" r="8" fill={foundZones.includes('thumb') ? "#FF4444" : "transparent"} 
+
+                                    className="cursor-pointer hover:fill-white/10 transition-colors"
+
+                                    onClick={() => toggleZone('thumb')} />
+
+                            
+
+                            {/* Nails/Tips */}
+
+                            <circle cx="50" cy="15" r="8" fill={foundZones.includes('nails') ? "#FF4444" : "transparent"} 
+
+                                    className="cursor-pointer hover:fill-white/10 transition-colors"
+
+                                    onClick={() => toggleZone('nails')} />
+
+                            
+
+                            {/* Wrist */}
+
+                            <circle cx="60" cy="85" r="8" fill={foundZones.includes('wrist') ? "#FF4444" : "transparent"} 
+
+                                    className="cursor-pointer hover:fill-white/10 transition-colors"
+
+                                    onClick={() => toggleZone('wrist')} />
+
+                        </svg>
+
+
+
+                        {/* Labels appearing */}
+
+                        {foundZones.includes('thumb') && <div className="absolute left-0 top-[40%] bg-red-600 text-white text-xs px-2 py-1 rounded">Pouces</div>}
+
+                        {foundZones.includes('nails') && <div className="absolute left-[35%] top-0 bg-red-600 text-white text-xs px-2 py-1 rounded">Sous les ongles</div>}
+
+                        {foundZones.includes('wrist') && <div className="absolute right-0 bottom-0 bg-red-600 text-white text-xs px-2 py-1 rounded">Poignets</div>}
+
+                    </div>
+
+
+
+                    <div className="mt-8 flex gap-2">
+
+                        {[0, 1, 2].map(i => (
+
+                            <div key={i} className={`w-4 h-4 rounded-full ${i < foundZones.length ? 'bg-red-500 shadow-[0_0_10px_red]' : 'bg-[#333]'}`}></div>
+
+                        ))}
+
+                    </div>
+
+                </div>
+
+            );
+
+        };
+
+
+
+        // 6. MAIN CONTROLLER
+
+        const Game = () => {
+
+            const [level, setLevel] = useState(0); 
+
+            const [score, setScore] = useState(0);
+
+
+
+            const nextLevel = (points) => {
+
+                setScore(s => s + points);
+
+                setLevel(l => l + 1);
+
+            };
+
+
+
+            const restart = () => {
+
+                setLevel(0);
+
+                setScore(0);
+
+            };
+
+
+
+            if (level === 0) {
+
+                return (
+
+                    <div className="min-h-screen bg-[#161616] flex items-center justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+
+                        <div className="max-w-xl w-full text-center p-10 bg-[#1E1E1E]/90 rounded-3xl border border-[#FFED3F] shadow-[0_0_40px_rgba(85,83,133,0.3)] backdrop-blur-sm">
+
+                            <div className="inline-block p-4 rounded-full bg-[#FFED3F] mb-6 shadow-lg">
+
+                                <IconSoap className="w-10 h-10 text-black" />
+
+                            </div>
+
+                            <h1 className="text-4xl font-black text-white mb-2 tracking-tight">PROTOCOLE <span className="text-[#FFED3F]">HYGIÈNE</span></h1>
+
+                            <p className="text-[#A3A0FF] font-bold text-lg mb-8 tracking-widest uppercase text-xs">Certification C3 & C4</p>
+
+                            
+
+                            <p className="text-[#D4D4D4] mb-8 leading-relaxed">
+
+                                La désinfection est la première étape <strong className="text-white">incontournable</strong>.
+
+                                Sans elle, aucune prestation ne peut être validée.
+
+                                <br/><br/>
+
+                                <em>Maîtrisez-vous vraiment les gestes qui protègent ?</em>
+
+                            </p>
+
+
+
+                            <button 
+
+                                onClick={() => setLevel(1)}
+
+                                className="w-full bg-[#555385] hover:bg-[#FFED3F] hover:text-black text-white font-bold py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-xl flex items-center justify-center gap-3 group"
+
+                            >
+
+                                Commencer le test <IconCheck className="group-hover:translate-x-1 transition-transform"/>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                );
+
+            }
+
+
+
+            if (level === 5) {
+
+                return (
+
+                    <GameShell level={4} maxLevels={4} score={score}>
+
+                        <div className="h-full flex flex-col items-center justify-center text-center p-8 fade-in">
+
+                            <div className="w-24 h-24 bg-[#FFED3F] rounded-full flex items-center justify-center mb-6 animate-gold-pulse">
+
+                                <span className="text-4xl">🏆</span>
+
+                            </div>
+
+                            <h2 className="text-3xl font-bold text-white mb-2">Certification Validée</h2>
+
+                            <p className="text-[#999] mb-8">Vous avez maîtrisé le protocole d'hygiène.</p>
+
+                            
+
+                            <div className="grid grid-cols-2 gap-4 w-full max-w-lg mb-8">
+
+                                <div className="bg-[#2A2A2A] p-4 rounded-lg border border-green-500/30">
+
+                                    <div className="text-xs text-[#737373] uppercase">Préparation</div>
+
+                                    <div className="text-green-400 font-bold">Conforme</div>
+
+                                </div>
+
+                                <div className="bg-[#2A2A2A] p-4 rounded-lg border border-green-500/30">
+
+                                    <div className="text-xs text-[#737373] uppercase">Méthodologie</div>
+
+                                    <div className="text-green-400 font-bold">Maîtrisée</div>
+
+                                </div>
+
+                                <div className="bg-[#2A2A2A] p-4 rounded-lg border border-green-500/30">
+
+                                    <div className="text-xs text-[#737373] uppercase">Chronologie</div>
+
+                                    <div className="text-green-400 font-bold">Respectée</div>
+
+                                </div>
+
+                                <div className="bg-[#2A2A2A] p-4 rounded-lg border border-green-500/30">
+
+                                    <div className="text-xs text-[#737373] uppercase">Vigilance</div>
+
+                                    <div className="text-green-400 font-bold">Active</div>
+
+                                </div>
+
+                            </div>
+
+
+
+                            <button 
+
+                                onClick={restart}
+
+                                className="text-[#A3A0FF] hover:text-white underline decoration-dashed underline-offset-4"
+
+                            >
+
+                                Recommencer l'entraînement
+
+                            </button>
+
+                        </div>
+
+                    </GameShell>
+
+                );
+
+            }
+
+
+
+            return (
+
+                <GameShell level={level} maxLevels={4} score={score}>
+
+                    {level === 1 && <LevelPreparation onComplete={nextLevel} />}
+
+                    {level === 2 && <LevelMethod onComplete={nextLevel} />}
+
+                    {level === 3 && <LevelSequence onComplete={nextLevel} />}
+
+                    {level === 4 && <LevelInspection onComplete={nextLevel} />}
+
+                </GameShell>
+
+            );
+
+        };
+
+
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+
+        root.render(<Game />);
+
+    </script>
+
+</body>
+
+</html>
