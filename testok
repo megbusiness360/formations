@@ -1,0 +1,1169 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Lightbulb, Search, BookOpen, Scale, MapPin, FileText, 
+  Coins, Users, UserCheck, Newspaper, Building2, FolderCheck, 
+  PenTool, Percent, Calculator, Gift, CheckCircle, Rocket, 
+  Briefcase, Landmark, ChevronDown, ChevronUp, Info, Download,
+  CreditCard, Stamp, AlertTriangle, ArrowRight, ShieldCheck, Eye
+} from 'lucide-react';
+
+/* --- CONFIGURATION & STYLES --- */
+// Simulation de la police Clash Grotesk via Space Grotesk (Google Fonts)
+const FontLoader = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background-color: #161616;
+      color: #EDEDED;
+    }
+    
+    .clash-title {
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .glass-panel {
+      background: #2A2A2A;
+      border: 1px solid #3B3B3B;
+    }
+
+    /* Scrollbar custom */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1E1E1E; }
+    ::-webkit-scrollbar-thumb { background: #525252; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #737373; }
+  `}</style>
+);
+
+const COLORS = {
+  yellow: {
+    main: '#FEE903', // Primary Call to Action
+    light: '#FFED3F',
+    dark: '#B9AA02',
+    text: '#2F2C00'  // Text on yellow
+  },
+  grey: {
+    bg: '#161616',
+    card: '#1E1E1E',
+    border: '#3B3B3B',
+    text: '#EDEDED',
+    muted: '#999999'
+  },
+  purple: {
+    accent: '#A3A0FF', // Tertiary highlights
+    light: '#BFBCFF'
+  }
+};
+
+// Composant Principal
+export default function App() {
+  return (
+    <div className="min-h-screen pb-20">
+      <FontLoader />
+      
+      {/* HEADER */}
+      <header className="py-12 px-4 border-b border-[#3B3B3B] bg-[#0D0D0D] sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-[#FEE903] text-[#2F2C00] px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-sm">
+              Masterclass
+            </div>
+            <span className="text-[#A3A0FF] text-xs font-bold tracking-widest uppercase">Formation Certifiante Live</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl clash-title text-white mb-4">
+            De Zéro à CEO <span className="text-[#FEE903]">.</span>
+          </h1>
+          <p className="text-[#999999] text-lg max-w-2xl leading-relaxed">
+            Le guide technique et pratique exhaustif pour créer votre société en France. 
+            Théorie experte + Application immédiate.
+          </p>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto p-4 md:p-8 space-y-24 mt-12">
+        
+        {/* --- PHASE 1: PRÉPARATION --- */}
+        <PhaseHeader title="PHASE 1 : LA CONCEPTION" subtitle="Avant de signer quoi que ce soit" />
+
+        <Section 
+          number="01" 
+          title="L'Adéquation Homme-Projet" 
+          icon={Lightbulb}
+          theory={
+            <>
+              <p>Une bonne idée ne suffit pas. Avant de dépenser 1€, vous devez valider l'adéquation <strong>Homme/Projet</strong>. C'est le critère n°1 des banques et des investisseurs.</p>
+              <ul className="list-disc pl-5 mt-4 space-y-2 text-[#D4D4D4]">
+                <li><strong>Compétences :</strong> Avez-vous le savoir-faire technique ou commercial ?</li>
+                <li><strong>Ressources :</strong> Avez-vous le temps et l'argent personnel pour tenir 12 mois sans salaire ?</li>
+                <li><strong>Contraintes :</strong> Votre situation familiale permet-elle ce risque ?</li>
+              </ul>
+              <div className="mt-4 p-4 bg-[#2A2A2A] border-l-4 border-[#FEE903] text-sm">
+                <span className="text-[#FEE903] font-bold">CONSEIL D'EXPERT :</span> Ne tombez pas amoureux de votre solution, mais du problème que vous résolvez.
+              </div>
+            </>
+          }
+        >
+          <FlipCard 
+            front="EXERCICE : Le Test du Miroir" 
+            back="Si vous deviez pitcher votre légitimité en une phrase face à un investisseur sceptique, que diriez-vous ? (Cliquez pour valider mentalement)" 
+          />
+        </Section>
+
+        <Section 
+          number="02" 
+          title="L'Étude de Marché (TAM/SAM/SOM)" 
+          icon={Search}
+          theory={
+            <>
+              <p>L'étude de marché n'est pas une formalité, c'est votre boussole. Oubliez les études généralistes, concentrez-vous sur votre zone de chalandise.</p>
+              <p className="mt-2">Vous devez définir 3 cercles :</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-[#D4D4D4]">
+                <li><strong>TAM (Total Addressable Market) :</strong> Le marché mondial théorique.</li>
+                <li><strong>SAM (Serviceable Available Market) :</strong> Le segment que vous visez (ex: France).</li>
+                <li><strong>SOM (Serviceable Obtainable Market) :</strong> Ce que vous pouvez réalistement capturer la 1ère année.</li>
+              </ul>
+            </>
+          }
+        >
+          <MarketStudyInteractive />
+        </Section>
+
+        <Section 
+          number="03" 
+          title="Le Business Plan Financier" 
+          icon={BookOpen}
+          theory={
+            <>
+              <p>Le BP sert à deux choses : vous rassurer et convaincre la banque. Il se compose obligatoirement de 3 tableaux financiers.</p>
+              <p className="mt-2 text-[#999999]">Cliquez sur chaque section ci-dessous pour comprendre la structure technique exigée par les experts-comptables.</p>
+            </>
+          }
+        >
+          <Accordion 
+            items={[
+              { title: "1. Compte de Résultat Prévisionnel", content: "Il calcule la rentabilité (Bénéfice ou Perte). CA - Charges = Résultat. C'est ici qu'on vérifie si le business model est viable structurellement." },
+              { title: "2. Plan de Financement", content: "Il vérifie l'équilibre au démarrage. Besoins (Travaux, Stock, Trésorerie) vs Ressources (Apport perso, Emprunt). Le total doit être à l'équilibre." },
+              { title: "3. Plan de Trésorerie", content: "Le nerf de la guerre. Il anticipe les encaissements et décaissements mois par mois pour éviter la cessation de paiement (cash burn)." }
+            ]} 
+          />
+        </Section>
+
+        {/* --- PHASE 2: JURIDIQUE --- */}
+        <PhaseHeader title="PHASE 2 : L'ARCHITECTURE JURIDIQUE" subtitle="Les fondations de la société" />
+
+        <Section 
+          number="04" 
+          title="Le Choix du Statut (SAS vs SARL)" 
+          icon={Scale}
+          theory={
+            <>
+              <p>C'est le choix le plus critique. Il détermine votre protection sociale et votre fiscalité personnelle. Il n'y a pas de 'meilleur' statut, seulement celui adapté à votre situation.</p>
+              <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
+                <div className="bg-[#2A2A2A] p-3 rounded border border-[#3B3B3B]">
+                  <strong className="text-[#A3A0FF]">SARL / EURL</strong>
+                  <p className="text-[#999999] mt-1">Gérant TNS (Indépendant). Charges sociales faibles (45%) mais protection moindre. Idéal pour projets patrimoniaux ou familiaux.</p>
+                </div>
+                <div className="bg-[#2A2A2A] p-3 rounded border border-[#3B3B3B]">
+                  <strong className="text-[#FEE903]">SAS / SASU</strong>
+                  <p className="text-[#999999] mt-1">Président Assimilé Salarié. Charges élevées (80%) mais protection top (retraite). Dividendes non chargés. Idéal pour startups et maintien ARE.</p>
+                </div>
+              </div>
+            </>
+          }
+        >
+          <StatusTabs />
+        </Section>
+
+        <Section 
+          number="05" 
+          title="Dénomination & Marque" 
+          icon={PenTool}
+          theory={
+            <>
+              <p>Attention à la confusion !</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-[#D4D4D4]">
+                <li><strong>Dénomination sociale :</strong> Le nom administratif (ex: Apple France SAS).</li>
+                <li><strong>Nom commercial / Enseigne :</strong> Ce que voient les clients (ex: Apple Store).</li>
+                <li><strong>Marque :</strong> Titre de propriété intellectuelle déposé à l'INPI (classes de produits).</li>
+              </ul>
+              <p className="mt-2 text-[#FEE903]">Testez ci-dessous la disponibilité de votre nom (Simulateur INPI).</p>
+            </>
+          }
+        >
+          <NameChecker />
+        </Section>
+
+        <Section 
+          number="06" 
+          title="Le Siège Social (Domiciliation)" 
+          icon={MapPin}
+          theory={
+            <>
+              <p>Sans adresse, pas de société. L'administration fiscale vous enverra tout ici. Le choix impacte votre CFE (Cotisation Foncière des Entreprises) !</p>
+              <p className="mt-2 text-sm text-[#999999]">Vous ne pouvez pas domicilier chez vous si vous n'êtes pas le représentant légal ou si le bail/copropriété l'interdit au-delà de 5 ans.</p>
+            </>
+          }
+        >
+          <AddressSelector />
+        </Section>
+
+        <Section 
+          number="07" 
+          title="Rédaction des Statuts" 
+          icon={FileText}
+          theory={
+            <>
+              <p>Les statuts sont la "Constitution" de votre entreprise. Ils régissent les relations entre associés. Ne faites jamais de copier-coller sans comprendre.</p>
+              <p className="mt-2">Les clauses vitales : Objet social (définit l'activité), Durée (99 ans), Capital, Présidence, et surtout les clauses de cession d'actions (agrément).</p>
+            </>
+          }
+        >
+          <StatutsBuilder />
+        </Section>
+
+        <Section 
+          number="08" 
+          title="Le Capital Social" 
+          icon={Coins}
+          theory={
+            <>
+              <p>C'est l'argent que vous mettez au pot commun. Il sert à payer les premiers frais.</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-[#D4D4D4]">
+                <li><strong>Minimum légal :</strong> 1€ (mais déconseillé pour la crédibilité).</li>
+                <li><strong>Capital Fixe :</strong> Classique. Modifier demande une AG + frais.</li>
+                <li><strong>Capital Variable :</strong> Permet de faire entrer/sortir des associés sans frais de greffe (très utile en SAS).</li>
+              </ul>
+            </>
+          }
+        >
+          <CapitalSlider />
+        </Section>
+
+        {/* --- PHASE 3: ORGANISATION --- */}
+        <PhaseHeader title="PHASE 3 : LA GOUVERNANCE" subtitle="Qui détient le pouvoir ?" />
+
+        <Section 
+          number="09" 
+          title="Répartition du Capital (La Table de Capitalisation)" 
+          icon={Users}
+          theory={
+            <>
+              <p>Qui possède quoi ? Attention aux seuils de blocage.</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-[#D4D4D4]">
+                <li><strong>50% + 1 voix :</strong> Majorité ordinaire (décisions de gestion courante, rémunération, comptes annuels).</li>
+                <li><strong>66% ou 75% :</strong> Majorité extraordinaire (modification des statuts, changement de siège, dissolution).</li>
+                <li><strong>34% :</strong> Minorité de blocage. Vous pouvez empêcher les changements majeurs.</li>
+              </ul>
+            </>
+          }
+        >
+          <ShareholderDial />
+        </Section>
+
+        <Section 
+          number="10" 
+          title="Nomination du Dirigeant" 
+          icon={UserCheck}
+          theory={
+            <>
+              <p>Le dirigeant (Président ou Gérant) est le seul habilité à engager la société (signer les contrats, embaucher).</p>
+              <p className="mt-2">Il peut être nommé dans les statuts (déconseillé car dur à changer) ou par un <strong>Acte de Nomination</strong> séparé (recommandé).</p>
+              <div className="mt-2 bg-[#2A2A2A] p-2 text-sm text-[#A3A0FF]">
+                Note : Le dirigeant est responsable civilement (fautes de gestion) et pénalement.
+              </div>
+            </>
+          }
+        >
+          <ManagerSelector />
+        </Section>
+
+        <Section 
+          number="11" 
+          title="L'Annonce Légale (JAL)" 
+          icon={Newspaper}
+          theory={
+            <>
+              <p>C'est la publicité obligatoire pour avertir les tiers que votre société naît. Elle doit être publiée dans un Journal d'Annonces Légales (JAL) du département du siège.</p>
+              <p className="mt-2">Elle contient : Forme, Dénomination, Capital, Siège, Objet, Durée, Président. C'est payant (environ 150€).</p>
+            </>
+          }
+        >
+          <TypewriterEffect text="AVIS DE CONSTITUTION. Aux termes d'un acte SSP en date du... il a été constitué une société..." />
+        </Section>
+
+        {/* --- PHASE 4: IMMATRICULATION --- */}
+        <PhaseHeader title="PHASE 4 : L'ACTION ADMINISTRATIVE" subtitle="Le parcours du combattant" />
+
+        <Section 
+          number="12" 
+          title="Dépôt des Fonds (La Banque)" 
+          icon={Landmark}
+          theory={
+            <>
+              <p>Étape cruciale. Vous devez déposer le capital (numéraire) sur un compte bloqué. La banque (ou le notaire) vous remet une <strong>Attestation de Dépôt des Fonds</strong>.</p>
+              <p className="mt-2 text-[#FEE903]">Sans ce papier, le Greffe refusera votre dossier. Les fonds sont débloqués sur présentation du K-bis final.</p>
+            </>
+          }
+        >
+          <BankDeposit />
+        </Section>
+
+        <Section 
+          number="13" 
+          title="Déclaration des Bénéficiaires Effectifs (RBE)" 
+          icon={ShieldCheck}
+          theory={
+            <>
+              <p>Loi anti-blanchiment. Vous devez déclarer toute personne physique possédant plus de 25% du capital ou des droits de vote.</p>
+              <p className="mt-2">C'est un document spécifique à joindre au dossier. L'oubli de ce document est un délit pénal.</p>
+            </>
+          }
+        >
+          <RbeChecklist />
+        </Section>
+
+        <Section 
+          number="14" 
+          title="Le Guichet Unique (INPI)" 
+          icon={Building2}
+          theory={
+            <>
+              <p>Depuis 2023, fini les CFE (Chambres de Commerce). Tout se passe sur <strong>procedures.inpi.fr</strong>.</p>
+              <p className="mt-2">C'est la plateforme unique qui redistribue vos infos vers l'INSEE, le Greffe, les Impôts et l'URSSAF. Préparez vos PDF !</p>
+            </>
+          }
+        >
+          <GuichetUploader />
+        </Section>
+
+        <Section 
+          number="15" 
+          title="Signature Électronique" 
+          icon={PenTool}
+          theory={
+            <>
+              <p>Aujourd'hui, 99% des dossiers sont numériques. Vous devez signer les statuts définitifs.</p>
+              <p className="mt-2 text-sm text-[#999999]">Attention : Si vous créez à distance, utilisez une signature certifiée eIDAS (DocuSign, Yousign, etc.) pour garantir la valeur légale.</p>
+            </>
+          }
+        >
+          <SignaturePad />
+        </Section>
+
+        <Section 
+          number="16" 
+          title="Option Fiscale (IS vs IR)" 
+          icon={Percent}
+          theory={
+            <>
+              <p>Par défaut, les sociétés de capitaux (SAS, SARL) sont à l'IS (Impôt sur les Sociétés). La société paie l'impôt, pas vous.</p>
+              <p className="mt-2">Option IR (Impôt sur le Revenu) : Possible pour les SARL de famille ou les SAS de moins de 5 ans. L'entreprise ne paie rien, le bénéfice "remonte" sur votre feuille d'impôt perso. Dangereux si vous faites beaucoup de bénéfices non réinvestis.</p>
+            </>
+          }
+        >
+          <TaxSimulator />
+        </Section>
+
+        <Section 
+          number="17" 
+          title="Régime de TVA" 
+          icon={Calculator}
+          theory={
+            <>
+              <p>Vous devez choisir votre régime de TVA dès la création.</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1 text-[#D4D4D4]">
+                <li><strong>Franchise en base :</strong> Pas de TVA à facturer ni à récupérer (si CA {"<"} 36k€). Simple mais vous perdez la TVA sur vos achats (PC, matériel).</li>
+                <li><strong>Réel Simplifié :</strong> Acomptes semestriels.</li>
+                <li><strong>Réel Normal :</strong> Déclaration mensuelle. Idéal si vous investissez beaucoup au début pour récupérer du cash rapidement.</li>
+              </ul>
+            </>
+          }
+        >
+          <VatSelector />
+        </Section>
+
+        <Section 
+          number="18" 
+          title="Demande ACRE & Aides" 
+          icon={Gift}
+          theory={
+            <>
+              <p>L'ACRE (Aide à la Création) est une exonération partielle de charges sociales la 1ère année.</p>
+              <p className="mt-2">Attention ! Pour les micro-entrepreneurs, il faut la demander. Pour les sociétés, elle est souvent automatique mais vérifiez bien votre éligibilité (demandeurs d'emploi, jeunes de moins de 26 ans...).</p>
+            </>
+          }
+        >
+          <ScratchCard />
+        </Section>
+
+        <Section 
+          number="19" 
+          title="Réception du K-bis" 
+          icon={CheckCircle}
+          theory={
+            <>
+              <p>Le Graal. L'extrait K-bis est la carte d'identité de la société. Il prouve son existence légale.</p>
+              <p className="mt-2">Dès réception (souvent 48h à 1 semaine après le dépôt complet), vous obtenez votre numéro SIREN (9 chiffres, l'entreprise) et SIRET (14 chiffres, l'établissement).</p>
+            </>
+          }
+        >
+          <KbisReveal />
+        </Section>
+
+        <Section 
+          number="20" 
+          title="Démarrage Opérationnel" 
+          icon={Rocket}
+          theory={
+            <>
+              <p>Vous avez le K-bis. Ce n'est pas fini, c'est le début.</p>
+              <p className="mt-2 font-bold text-[#FEE903]">Checklist immédiate :</p>
+              <ol className="list-decimal pl-5 mt-1 space-y-1 text-[#D4D4D4]">
+                <li>Envoyer le K-bis à la banque pour débloquer les fonds.</li>
+                <li>Prendre une Assurance RC Pro (Responsabilité Civile).</li>
+                <li>Engager un expert-comptable (lettre de mission).</li>
+                <li>Ouvrir les accès impots.gouv.fr professionnel.</li>
+              </ol>
+            </>
+          }
+        >
+          <LaunchButton />
+        </Section>
+        
+        <footer className="text-center text-[#525252] py-24 text-sm font-bold tracking-widest uppercase">
+          <p>© 2026 Masterclass Création France.</p>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+/* --- COMPONENTS --- */
+
+const PhaseHeader = ({ title, subtitle }) => (
+  <div className="border-l-4 border-[#FEE903] pl-6 py-2 mb-12">
+    <h2 className="text-3xl clash-title text-white">{title}</h2>
+    <p className="text-[#A3A0FF] mt-1 font-medium tracking-wide uppercase text-sm">{subtitle}</p>
+  </div>
+);
+
+const Section = ({ title, icon: Icon, children, number, theory }) => (
+  <section className="group relative">
+    {/* Connector Line */}
+    <div className="absolute left-6 top-16 bottom-0 w-px bg-[#3B3B3B] group-last:hidden -z-10"></div>
+
+    <div className="bg-[#1E1E1E] rounded-none border border-[#3B3B3B] overflow-hidden hover:border-[#525252] transition-colors duration-300">
+      <div className="bg-[#161616] p-6 border-b border-[#3B3B3B] flex items-start gap-4">
+        <div className="bg-[#2A2A2A] text-[#FEE903] w-12 h-12 flex items-center justify-center font-bold text-lg border border-[#3B3B3B] shadow-lg shrink-0">
+          {number}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-1">
+            <Icon className="text-[#A3A0FF] w-5 h-5" />
+            <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight">{title}</h2>
+          </div>
+          <div className="mt-4 text-[#EDEDED] text-base leading-relaxed prose prose-invert max-w-none">
+            {theory}
+          </div>
+        </div>
+      </div>
+      
+      {/* INTERACTIVE ZONE LABEL */}
+      <div className="bg-[#262626] py-2 px-6 border-b border-[#3B3B3B] flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-[#FEE903] animate-pulse"></div>
+        <span className="text-xs font-bold text-[#999999] uppercase tracking-widest">Zone d'entraînement pratique</span>
+      </div>
+
+      <div className="p-6 bg-[#1A1A1A]">
+        {children}
+      </div>
+    </div>
+  </section>
+);
+
+/* --- 1. FLIP CARD --- */
+const FlipCard = ({ front, back }) => {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <div className="h-64 perspective-1000 cursor-pointer group" onClick={() => setFlipped(!flipped)}>
+      <div className={`relative w-full h-full transition-transform duration-700 transform-style-3d ${flipped ? 'rotate-y-180' : ''}`}>
+        {/* Front */}
+        <div className="absolute w-full h-full bg-[#2A2A2A] border border-[#3B3B3B] flex flex-col items-center justify-center text-center p-8 backface-hidden hover:border-[#FEE903] transition-colors">
+          <Eye className="w-12 h-12 text-[#FEE903] mb-6" />
+          <p className="font-bold text-xl text-white clash-title">{front}</p>
+          <div className="mt-8 flex items-center gap-2 text-xs text-[#999999] uppercase tracking-widest border border-[#525252] px-3 py-1 rounded-full">
+            <span className="w-2 h-2 bg-[#FEE903] rounded-full"></span>
+            Cliquez pour tester
+          </div>
+        </div>
+        {/* Back */}
+        <div className="absolute w-full h-full bg-[#FEE903] text-[#2F2C00] flex flex-col items-center justify-center text-center p-8 rotate-y-180 backface-hidden">
+          <p className="font-medium text-lg leading-relaxed">{back}</p>
+          <CheckCircle className="mt-4 w-8 h-8 opacity-50" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* --- 2. MARKET STUDY SLIDERS --- */
+const MarketStudyInteractive = () => {
+  const [tam, setTam] = useState(100); // World
+  const [sam, setSam] = useState(20);  // Country
+  const [som, setSom] = useState(2);   // Obtainable
+
+  return (
+    <div className="space-y-8 bg-[#222] p-6 rounded border border-[#3B3B3B]">
+      <div className="flex justify-center items-end gap-2 h-40 pb-4 border-b border-[#3B3B3B]">
+        {/* TAM Circle representation */}
+        <div className="w-24 bg-[#3B3B3B] rounded-t flex items-end justify-center relative group" style={{height: '100%'}}>
+           <span className="absolute top-2 text-xs font-bold text-[#737373]">TAM (Monde)</span>
+        </div>
+        <div className="w-24 bg-[#525252] rounded-t flex items-end justify-center relative transition-all duration-500" style={{height: `${sam}%`}}>
+           <span className="absolute -top-6 text-xs font-bold text-[#A3A0FF]">SAM (Cible)</span>
+        </div>
+        <div className="w-24 bg-[#FEE903] rounded-t flex items-end justify-center relative transition-all duration-500" style={{height: `${som * 5}%`}}>
+           <span className="absolute -top-6 text-xs font-bold text-[#FEE903]">SOM (Réel)</span>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <label className="block">
+          <div className="flex justify-between text-sm mb-1 text-[#D4D4D4]">
+            <span>Définir votre SAM (Cible accessible)</span>
+            <span>{sam}% du TAM</span>
+          </div>
+          <input type="range" min="5" max="80" value={sam} onChange={(e) => setSam(e.target.value)} className="w-full accent-[#A3A0FF]" />
+        </label>
+
+        <label className="block">
+          <div className="flex justify-between text-sm mb-1 text-[#D4D4D4]">
+            <span>Définir votre SOM (Part de marché an 1)</span>
+            <span>{som}% du SAM</span>
+          </div>
+          <input type="range" min="1" max="20" value={som} onChange={(e) => setSom(e.target.value)} className="w-full accent-[#FEE903]" />
+        </label>
+      </div>
+
+      <p className="text-xs text-[#999999] text-center italic">
+        Un investisseur veut voir un gros TAM mais un SOM réaliste.
+      </p>
+    </div>
+  );
+};
+
+/* --- 3. ACCORDION --- */
+const Accordion = ({ items }) => {
+  const [openIndex, setOpenIndex] = useState(0);
+  return (
+    <div className="space-y-3">
+      {items.map((item, index) => (
+        <div key={index} className={`border ${openIndex === index ? 'border-[#FEE903] bg-[#2A2A2A]' : 'border-[#3B3B3B] bg-[#161616]'} transition-colors`}>
+          <button 
+            className="w-full text-left p-4 flex justify-between items-center"
+            onClick={() => setOpenIndex(index === openIndex ? null : index)}
+          >
+            <span className={`font-bold uppercase tracking-wide text-sm ${openIndex === index ? 'text-[#FEE903]' : 'text-[#EDEDED]'}`}>
+              {item.title}
+            </span>
+            {openIndex === index ? <ChevronUp size={16} className="text-[#FEE903]"/> : <ChevronDown size={16} className="text-[#525252]"/>}
+          </button>
+          {openIndex === index && (
+            <div className="p-4 pt-0 text-[#D4D4D4] text-sm leading-relaxed border-t border-[#3B3B3B] mt-2">
+              <div className="pt-4">{item.content}</div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* --- 4. TABS --- */
+const StatusTabs = () => {
+  const [activeTab, setActiveTab] = useState('SAS');
+  const details = {
+    'SAS': { title: "La Reine des Startups", desc: "Le Président n'a pas la sécurité sociale des indépendants (RSI/SSI) mais le régime général. Pas de salaire = Pas de charges (utile si vous touchez le chômage). Dividendes taxés à 30% (Flat Tax) sans charges sociales." },
+    'SARL': { title: "La Classique Familiale", desc: "Le Gérant Majoritaire paie des charges sociales (45%) même sur les dividendes ! Mais les cotisations minimales valident des trimestres de retraite même sans gros salaire. Idéal pour un artisan ou commerçant stable." },
+    'EI': { title: "L'Individuel (Hors Sujet)", desc: "Attention, l'EI n'est pas une société (pas de personne morale distincte). C'est vous en nom propre. Plus risqué juridiquement même si la loi 2022 a amélioré la protection." }
+  };
+  
+  return (
+    <div className="border border-[#3B3B3B] bg-[#161616]">
+      <div className="flex border-b border-[#3B3B3B]">
+        {Object.keys(details).map(tab => (
+          <button
+            key={tab}
+            className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === tab ? 'bg-[#FEE903] text-[#2F2C00]' : 'text-[#737373] hover:text-[#D4D4D4]'}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+      <div className="p-6 min-h-[140px] flex flex-col justify-center">
+        <h3 className="text-[#A3A0FF] font-bold mb-2">{details[activeTab].title}</h3>
+        <p className="text-[#EDEDED] text-sm leading-relaxed">{details[activeTab].desc}</p>
+      </div>
+    </div>
+  );
+};
+
+/* --- 5. NAME CHECKER --- */
+const NameChecker = () => {
+  const [name, setName] = useState('');
+  const [status, setStatus] = useState('idle');
+
+  useEffect(() => {
+    if(!name) { setStatus('idle'); return; }
+    setStatus('checking');
+    const timer = setTimeout(() => {
+      setStatus('available');
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [name]);
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <input 
+          type="text" 
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Entrez un nom (ex: CyberCorp)"
+          className="w-full bg-[#161616] border border-[#525252] text-white p-4 pl-12 focus:border-[#FEE903] focus:outline-none transition-colors uppercase font-mono tracking-wider"
+        />
+        <Search className="absolute left-4 top-4 text-[#525252] w-5 h-5" />
+        <div className="absolute right-4 top-4">
+          {status === 'checking' && <div className="w-5 h-5 border-2 border-[#FEE903] border-t-transparent rounded-full animate-spin"></div>}
+          {status === 'available' && <div className="text-[#FEE903] font-bold text-xs bg-[#2F2C00] px-2 py-1 rounded">DISPONIBLE (SIMULATION)</div>}
+        </div>
+      </div>
+      <div className="mt-3 flex gap-2 text-[10px] text-[#737373] uppercase tracking-widest">
+        <span>Vérifications réelles à faire :</span>
+        <span className="text-[#A3A0FF]">1. INPI Marques</span>
+        <span>•</span>
+        <span className="text-[#A3A0FF]">2. Societé.com</span>
+        <span>•</span>
+        <span className="text-[#A3A0FF]">3. Noms de domaine</span>
+      </div>
+    </div>
+  );
+};
+
+/* --- 6. ADDRESS SELECTOR --- */
+const AddressSelector = () => {
+  const [selected, setSelected] = useState(null);
+  const options = [
+    { id: 'home', label: 'Domicile Perso', icon: '🏠', cost: '0€', warning: 'Loyer interdit' },
+    { id: 'cowork', label: 'Société de Domiciliation', icon: '🏢', cost: '~30€/mois', warning: 'Prestigieux' },
+    { id: 'comm', label: 'Bail Commercial', icon: '🏪', cost: '$$$', warning: 'Engagement 3 ans' },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {options.map((opt) => (
+        <div 
+          key={opt.id}
+          onClick={() => setSelected(opt.id)}
+          className={`cursor-pointer border p-4 flex flex-col items-center text-center transition-all duration-300 relative overflow-hidden ${selected === opt.id ? 'border-[#FEE903] bg-[#2A2A2A]' : 'border-[#3B3B3B] bg-[#161616] hover:border-[#737373]'}`}
+        >
+          {selected === opt.id && <div className="absolute top-0 right-0 w-3 h-3 bg-[#FEE903]"></div>}
+          <div className="text-2xl mb-3 grayscale">{opt.icon}</div>
+          <h3 className={`font-bold text-sm uppercase mb-1 ${selected === opt.id ? 'text-[#FEE903]' : 'text-[#EDEDED]'}`}>{opt.label}</h3>
+          <p className="text-xs text-[#999999] mb-2">{opt.cost}</p>
+          <p className="text-[10px] text-[#A3A0FF] border-t border-[#3B3B3B] pt-2 w-full">{opt.warning}</p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* --- 7. STATUTS BUILDER --- */
+const StatutsBuilder = () => {
+  const [clauses, setClauses] = useState({ object: false, duree: false, capital: false });
+  
+  const toggle = (key) => setClauses(c => ({...c, [key]: !c[key]}));
+  const allSelected = Object.values(clauses).every(Boolean);
+
+  return (
+    <div className="flex flex-col md:flex-row gap-4">
+      {/* List */}
+      <div className="flex-1 space-y-2">
+        <p className="text-xs text-[#737373] uppercase mb-2 font-bold">Assemblez les clauses obligatoires :</p>
+        {[
+          { key: 'object', label: 'Article 2 : Objet Social', desc: 'Activités principales et connexes.' },
+          { key: 'duree', label: 'Article 3 : Durée', desc: 'Fixée à 99 ans.' },
+          { key: 'capital', label: 'Article 6 : Capital Social', desc: 'Montant et répartition.' }
+        ].map(item => (
+          <div 
+            key={item.key}
+            onClick={() => toggle(item.key)}
+            className={`p-3 border cursor-pointer flex justify-between items-center ${clauses[item.key] ? 'border-[#FEE903] bg-[#2A2A2A]' : 'border-[#3B3B3B] bg-[#161616]'}`}
+          >
+            <div>
+              <div className="font-bold text-sm text-[#EDEDED]">{item.label}</div>
+              <div className="text-[10px] text-[#999999]">{item.desc}</div>
+            </div>
+            <div className={`w-4 h-4 border ${clauses[item.key] ? 'bg-[#FEE903] border-[#FEE903]' : 'border-[#525252]'}`}></div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Preview */}
+      <div className="flex-1 bg-[#EDEDED] text-[#161616] p-4 font-serif text-[10px] leading-tight shadow-inner opacity-90 relative">
+        <h4 className="text-center font-bold underline mb-2">STATUTS CONSTITUTIFS</h4>
+        <p className="mb-2">Le soussigné a établi les présents statuts...</p>
+        
+        {clauses.object && <p className="mb-2 p-1 bg-[#FEE903]/20 border-l-2 border-[#FEE903]"><strong>Art 2.</strong> La société a pour objet : Conseil en systèmes...</p>}
+        {clauses.duree && <p className="mb-2 p-1 bg-[#FEE903]/20 border-l-2 border-[#FEE903]"><strong>Art 3.</strong> Durée : 99 années à compter de l'immatriculation.</p>}
+        {clauses.capital && <p className="mb-2 p-1 bg-[#FEE903]/20 border-l-2 border-[#FEE903]"><strong>Art 6.</strong> Le capital est fixé à 1000 euros.</p>}
+        
+        {!allSelected && <div className="absolute inset-0 bg-black/10 flex items-center justify-center backdrop-blur-[1px]"><span className="bg-black text-white px-2 py-1 text-xs">Document incomplet</span></div>}
+      </div>
+    </div>
+  );
+};
+
+/* --- 8. CAPITAL SLIDER --- */
+const CapitalSlider = () => {
+  const [amount, setAmount] = useState(1000);
+  return (
+    <div className="text-center bg-[#222] p-6 border border-[#3B3B3B]">
+      <div className="text-5xl font-bold text-[#FEE903] mb-2 font-mono">{amount} €</div>
+      <p className="text-xs text-[#999999] mb-6 uppercase tracking-widest">Montant du dépôt initial</p>
+      
+      <input 
+        type="range" 
+        min="1" 
+        max="5000" 
+        step="100" 
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        className="w-full h-1 bg-[#525252] rounded-lg appearance-none cursor-pointer accent-[#FEE903]"
+      />
+      
+      <div className="mt-6 flex gap-4 text-left">
+        <div className={`flex-1 p-2 border text-xs ${amount < 1000 ? 'border-[#FEE903] text-[#FEE903]' : 'border-[#3B3B3B] text-[#525252]'}`}>
+          <strong>Faible (1€ - 900€)</strong><br/>Risque : Perte de crédibilité fournisseurs.
+        </div>
+        <div className={`flex-1 p-2 border text-xs ${amount >= 1000 ? 'border-[#A3A0FF] text-[#A3A0FF]' : 'border-[#3B3B3B] text-[#525252]'}`}>
+          <strong>Standard (1000€ +)</strong><br/>Avantage : Inspire confiance. Frais bancaires souvent couverts.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* --- 9. SHAREHOLDER DIAL --- */
+const ShareholderDial = () => {
+  const [share, setShare] = useState(60);
+  return (
+    <div className="flex flex-col md:flex-row items-center gap-8 justify-center">
+      {/* Chart */}
+      <div className="relative w-40 h-40">
+        <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+          <path
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            fill="none"
+            stroke="#2A2A2A"
+            strokeWidth="4"
+          />
+          <path
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            fill="none"
+            stroke="#FEE903"
+            strokeWidth="4"
+            strokeDasharray={`${share}, 100`}
+            className="transition-all duration-300 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-bold text-white">{share}%</span>
+          <span className="text-[10px] text-[#999999] uppercase">Vos Parts</span>
+        </div>
+      </div>
+
+      {/* Control & Info */}
+      <div className="flex-1 space-y-4 w-full">
+        <input 
+          type="range" 
+          min="1" 
+          max="100" 
+          value={share}
+          onChange={(e) => setShare(e.target.value)}
+          className="w-full accent-[#FEE903]"
+        />
+        
+        <div className="space-y-2 text-xs">
+          <div className={`p-2 border ${share > 50 ? 'border-green-500 text-green-400' : 'border-[#3B3B3B] text-[#525252]'}`}>
+            ✓ Majorité Simple ({'>'}50%) : Gestion courante, salaire.
+          </div>
+          <div className={`p-2 border ${share >= 66 ? 'border-green-500 text-green-400' : 'border-[#3B3B3B] text-[#525252]'}`}>
+            ✓ Majorité Renforcée ({'>'}66%) : Modification des statuts.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* --- 10. MANAGER SELECTOR --- */
+const ManagerSelector = () => {
+  const [isMe, setIsMe] = useState(true);
+  return (
+    <div className="bg-[#161616] border border-[#3B3B3B] p-6 text-center">
+      <div className="flex bg-[#2A2A2A] p-1 rounded mb-6">
+        <button 
+          className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-all ${isMe ? 'bg-[#EDEDED] text-[#161616]' : 'text-[#737373]'}`}
+          onClick={() => setIsMe(true)}
+        >
+          Moi-même (Président)
+        </button>
+        <button 
+          className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-all ${!isMe ? 'bg-[#EDEDED] text-[#161616]' : 'text-[#737373]'}`}
+          onClick={() => setIsMe(false)}
+        >
+          Un Tiers (DG)
+        </button>
+      </div>
+
+      <div className="flex justify-center gap-8 text-left max-w-sm mx-auto">
+        <div className={`transition-opacity ${isMe ? 'opacity-100' : 'opacity-20'}`}>
+          <UserCheck size={32} className="text-[#FEE903] mb-2 mx-auto" />
+          <p className="text-sm text-[#EDEDED] text-center">Vous engagez votre responsabilité civile et pénale.</p>
+        </div>
+        <div className="w-px bg-[#3B3B3B]"></div>
+        <div className={`transition-opacity ${!isMe ? 'opacity-100' : 'opacity-20'}`}>
+          <Briefcase size={32} className="text-[#A3A0FF] mb-2 mx-auto" />
+          <p className="text-sm text-[#EDEDED] text-center">Le tiers gère le quotidien. Vous contrôlez via l'AG.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* --- 11. TYPEWRITER --- */
+const TypewriterEffect = ({ text }) => {
+  const [display, setDisplay] = useState('');
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    if (!started) return;
+    let i = 0;
+    const timer = setInterval(() => {
+      setDisplay(text.substring(0, i));
+      i++;
+      if (i > text.length) clearInterval(timer);
+    }, 20);
+    return () => clearInterval(timer);
+  }, [started, text]);
+
+  return (
+    <div 
+      className="bg-[#D4D4D4] text-[#161616] p-6 font-mono text-xs border-l-8 border-[#FEE903] relative min-h-[120px] shadow-inner cursor-text"
+      onMouseEnter={() => setStarted(true)}
+    >
+      <div className="absolute top-2 right-2 text-[10px] text-[#525252] uppercase font-bold">Simulateur JAL</div>
+      {!started && <span className="text-[#737373] animate-pulse">Survolez pour générer l'annonce légale...</span>}
+      <p className="whitespace-pre-wrap leading-relaxed">
+        {display}
+        <span className="animate-pulse bg-[#161616] text-[#FEE903] ml-1 px-1"> </span>
+      </p>
+    </div>
+  );
+};
+
+/* --- 12. BANK DEPOSIT --- */
+const BankDeposit = () => {
+  const [deposited, setDeposited] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div 
+        className={`w-full h-32 border-2 border-dashed rounded flex flex-col items-center justify-center transition-all cursor-pointer group ${deposited ? 'border-[#FEE903] bg-[#2F2C00]/20' : 'border-[#525252] bg-[#161616] hover:border-[#EDEDED]'}`}
+        onClick={() => setDeposited(true)}
+      >
+        {!deposited ? (
+          <>
+            <Landmark className="w-8 h-8 text-[#737373] group-hover:text-[#EDEDED] mb-2 transition-colors" />
+            <span className="text-xs font-bold uppercase text-[#737373]">Cliquez pour virer les fonds au notaire</span>
+          </>
+        ) : (
+          <div className="text-center animate-bounce">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-[#FEE903] rounded-full mb-2 shadow-[0_0_15px_#FEE903]">
+              <CheckCircle className="text-[#2F2C00]" />
+            </div>
+            <p className="text-[#FEE903] text-sm font-bold uppercase">Attestation reçue</p>
+          </div>
+        )}
+      </div>
+      <p className="text-[10px] text-[#737373]">
+        Le document reçu doit être scanné pour l'étape suivante.
+      </p>
+    </div>
+  );
+};
+
+/* --- 13. RBE CHECKLIST --- */
+const RbeChecklist = () => {
+  const [checks, setChecks] = useState([false, false]);
+  return (
+    <div className="bg-[#2A2A2A] p-4 border border-[#3B3B3B]">
+      <p className="text-xs text-[#999999] mb-3">Cochez si vrai pour identifier les bénéficiaires :</p>
+      <div className="space-y-2">
+        <label className="flex items-center gap-3 p-3 bg-[#161616] cursor-pointer hover:bg-black transition-colors">
+          <div className={`w-5 h-5 border flex items-center justify-center ${checks[0] ? 'bg-[#A3A0FF] border-[#A3A0FF] text-[#161616]' : 'border-[#525252]'}`}>
+            {checks[0] && "✓"}
+          </div>
+          <input type="checkbox" className="hidden" onChange={() => setChecks([!checks[0], checks[1]])} />
+          <span className="text-sm text-[#D4D4D4]">Détient &gt; 25% du capital ?</span>
+        </label>
+        <label className="flex items-center gap-3 p-3 bg-[#161616] cursor-pointer hover:bg-black transition-colors">
+          <div className={`w-5 h-5 border flex items-center justify-center ${checks[1] ? 'bg-[#A3A0FF] border-[#A3A0FF] text-[#161616]' : 'border-[#525252]'}`}>
+             {checks[1] && "✓"}
+          </div>
+          <input type="checkbox" className="hidden" onChange={() => setChecks([checks[0], !checks[1]])} />
+          <span className="text-sm text-[#D4D4D4]">Exerce un contrôle sur les décisions (Droit de vote) ?</span>
+        </label>
+      </div>
+      {checks.some(c => c) && (
+        <div className="mt-3 text-[#A3A0FF] text-xs font-bold border-t border-[#3B3B3B] pt-2">
+          ⚠ Cette personne DOIT figurer sur le formulaire M0 et le document RBE.
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* --- 14. GUICHET UPLOADER --- */
+const GuichetUploader = () => {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState('waiting'); // waiting, uploading, done
+
+  const startUpload = () => {
+    if(status !== 'waiting') return;
+    setStatus('uploading');
+    const interval = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) {
+          clearInterval(interval);
+          setStatus('done');
+          return 100;
+        }
+        return p + 5;
+      });
+    }, 100);
+  };
+
+  return (
+    <div className="bg-[#161616] p-4 border border-[#3B3B3B]">
+      <div className="flex justify-between text-xs text-[#999999] mb-2 uppercase font-bold">
+        <span>INPI Connect</span>
+        <span>Dossier Unique</span>
+      </div>
+      
+      <div 
+        className="h-12 bg-[#2A2A2A] border border-[#525252] flex items-center px-4 relative cursor-pointer overflow-hidden"
+        onClick={startUpload}
+      >
+        {/* Progress Bar */}
+        <div className="absolute left-0 top-0 bottom-0 bg-[#3B3B3B] transition-all duration-200" style={{ width: `${progress}%` }}></div>
+        
+        {/* Content */}
+        <div className="relative z-10 flex justify-between w-full items-center">
+          <span className="text-sm font-mono text-[#EDEDED]">
+            {status === 'waiting' && "Cliquer pour transmettre le dossier XML"}
+            {status === 'uploading' && `Transmission... ${progress}%`}
+            {status === 'done' && "Dossier Validé (Accusé réception)"}
+          </span>
+          {status === 'done' ? <CheckCircle className="text-[#FEE903] w-4 h-4"/> : <Download className="text-[#737373] w-4 h-4"/>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* --- 15. SIGNATURE PAD --- */
+const SignaturePad = () => {
+  const [signed, setSigned] = useState(false);
+  
+  return (
+    <div 
+      className={`border h-32 flex items-center justify-center relative bg-[#EDEDED] cursor-crosshair transition-colors ${signed ? 'border-[#FEE903]' : 'border-[#3B3B3B] hover:border-[#999999]'}`}
+      onClick={() => setSigned(true)}
+    >
+      {!signed && <span className="text-[#525252] text-xs uppercase font-bold tracking-widest pointer-events-none">Signer ici (Certificat eIDAS niveau 2)</span>}
+      {signed && (
+        <div className="absolute font-serif italic text-4xl text-[#161616] rotate-[-5deg] mix-blend-multiply">
+          Lu et Approuvé
+          <span className="block text-[10px] font-sans not-italic text-[#525252] mt-1 text-center border-t border-black pt-1">Signé électroniquement le 19/01/2026</span>
+        </div>
+      )}
+      <div className="absolute bottom-2 right-2 text-[8px] text-[#999999]">Crypté SHA-256</div>
+    </div>
+  );
+};
+
+/* --- 16. TAX SIMULATOR (IS/IR) --- */
+const TaxSimulator = () => {
+  const [mode, setMode] = useState('IS');
+  const benefice = 50000;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex bg-[#2A2A2A] p-1">
+        <button className={`flex-1 py-2 text-xs font-bold ${mode === 'IS' ? 'bg-[#A3A0FF] text-[#161616]' : 'text-[#737373]'}`} onClick={() => setMode('IS')}>Impôt Société (IS)</button>
+        <button className={`flex-1 py-2 text-xs font-bold ${mode === 'IR' ? 'bg-[#FEE903] text-[#161616]' : 'text-[#737373]'}`} onClick={() => setMode('IR')}>Impôt Revenu (IR)</button>
+      </div>
+
+      <div className="bg-[#161616] p-4 border border-[#3B3B3B] font-mono text-sm">
+        <div className="flex justify-between mb-2 text-[#737373]">
+          <span>Bénéfice :</span>
+          <span>{benefice} €</span>
+        </div>
+        <div className="flex justify-between mb-4 border-b border-[#3B3B3B] pb-2">
+          <span>Taux :</span>
+          <span className={mode === 'IS' ? 'text-[#A3A0FF]' : 'text-[#FEE903]'}>
+            {mode === 'IS' ? '15% (taux réduit)' : 'Taux progressif (Barème)'}
+          </span>
+        </div>
+        <div className="flex justify-between text-lg font-bold text-[#EDEDED]">
+          <span>Impôt Dû :</span>
+          <span>
+            {mode === 'IS' ? (benefice * 0.15) + ' €' : 'Variable selon foyer'}
+          </span>
+        </div>
+      </div>
+      <p className="text-[10px] text-[#737373] italic">
+        *L'IS permet de laisser l'argent dans la société pour réinvestir sans payer d'impôt perso.
+      </p>
+    </div>
+  );
+};
+
+/* --- 17. VAT SELECTOR --- */
+const VatSelector = () => {
+  const [selected, setSelected] = useState('reel');
+  return (
+    <div className="space-y-2">
+      {[
+        { id: 'franchise', label: 'Franchise en Base', sub: 'Pas de TVA (Micro-entreprise souvent).' },
+        { id: 'reel', label: 'Réel Simplifié', sub: 'La norme. CA < 800k€.' },
+        { id: 'normal', label: 'Réel Normal', sub: 'Déclaration mensuelle. Obligatoire si gros CA.' }
+      ].map(opt => (
+        <div 
+          key={opt.id}
+          onClick={() => setSelected(opt.id)}
+          className={`p-3 border flex items-center gap-4 cursor-pointer transition-all ${selected === opt.id ? 'border-[#FEE903] bg-[#2A2A2A]' : 'border-[#3B3B3B] bg-[#161616]'}`}
+        >
+          <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selected === opt.id ? 'border-[#FEE903]' : 'border-[#525252]'}`}>
+            {selected === opt.id && <div className="w-2 h-2 rounded-full bg-[#FEE903]"></div>}
+          </div>
+          <div>
+            <div className={`text-sm font-bold ${selected === opt.id ? 'text-[#EDEDED]' : 'text-[#737373]'}`}>{opt.label}</div>
+            <div className="text-[10px] text-[#525252]">{opt.sub}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* --- 18. SCRATCH CARD (ACRE) --- */
+const ScratchCard = () => {
+  const [scratched, setScratched] = useState(false);
+  
+  return (
+    <div 
+      className="relative h-24 bg-[#2A2A2A] border border-[#3B3B3B] flex items-center justify-center overflow-hidden cursor-move select-none"
+      onMouseEnter={() => setScratched(true)}
+    >
+      {/* Hidden Content */}
+      <div className="text-center">
+        <div className="text-[#FEE903] font-bold text-lg">EXONÉRATION ACTIVÉE</div>
+        <div className="text-[#EDEDED] text-xs">Vous économisez ~10 000€ de charges an 1.</div>
+      </div>
+
+      {/* Overlay */}
+      <div className={`absolute inset-0 bg-[#525252] flex items-center justify-center transition-opacity duration-700 ${scratched ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className="text-[#D4D4D4] font-bold uppercase tracking-widest text-xs flex items-center gap-2">
+          <Gift size={14}/>
+          Survolez pour gratter
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* --- 19. KBIS REVEAL --- */
+const KbisReveal = () => {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <div className="flex flex-col items-center">
+      <div className={`relative w-48 h-32 bg-[#EDEDED] text-[#161616] p-4 text-[5px] shadow-2xl transition-all duration-1000 transform ${revealed ? 'translate-y-0 opacity-100 rotate-0' : 'translate-y-10 opacity-50 rotate-3'}`}>
+        <div className="border-b border-black mb-1 pb-1 font-bold">GREFFE DU TRIBUNAL DE COMMERCE</div>
+        <p className="mb-1">EXTRAIT D'IMMATRICULATION PRINCIPALE AU REGISTRE DU COMMERCE ET DES SOCIETES</p>
+        <div className="bg-blue-100 p-1 mb-1">
+          <strong>NUMERO RCS : </strong> <span className="font-mono">802 934 192 R.C.S. PARIS</span>
+        </div>
+        <p>Dénomination : YOUR COMPANY SAS</p>
+        <p>Capital : 1000.00 EUROS</p>
+        <p>Président : VOUS</p>
+        
+        {/* Hologram Effect */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent opacity-30 pointer-events-none"></div>
+      </div>
+
+      <button 
+        onClick={() => setRevealed(true)}
+        className="mt-6 flex items-center gap-2 px-6 py-3 bg-[#A3A0FF] text-[#161616] font-bold text-xs uppercase tracking-widest hover:bg-white transition-colors rounded-sm"
+      >
+        <Stamp size={16} /> Générer le K-bis officiel
+      </button>
+    </div>
+  );
+};
+
+/* --- 20. LAUNCH BUTTON --- */
+const LaunchButton = () => {
+  const [launched, setLaunched] = useState(false);
+  
+  return (
+    <div className="text-center pt-8">
+      {!launched ? (
+        <button
+          onClick={() => setLaunched(true)}
+          className="group relative inline-flex items-center justify-center px-8 py-5 text-lg font-bold text-[#2F2C00] uppercase tracking-widest overflow-hidden transition-all bg-[#FEE903] hover:bg-[#FFED3F] focus:outline-none focus:ring-4 focus:ring-[#FEE903]/50 w-full md:w-auto"
+        >
+          <span className="relative z-10 flex items-center gap-3">
+            Lancer l'activité <ArrowRight className="group-hover:translate-x-1 transition-transform"/>
+          </span>
+        </button>
+      ) : (
+        <div className="bg-[#2F2C00] border border-[#FEE903] p-8 animate-fadeIn">
+          <h3 className="text-2xl text-[#FEE903] font-bold mb-4">FÉLICITATIONS, CEO.</h3>
+          <p className="text-[#EDEDED] mb-4">Votre structure est juridiquement parfaite. Place au business.</p>
+          <div className="flex justify-center gap-4 text-2xl">
+            <span className="animate-bounce" style={{animationDelay: '0ms'}}>🚀</span>
+            <span className="animate-bounce" style={{animationDelay: '100ms'}}>📈</span>
+            <span className="animate-bounce" style={{animationDelay: '200ms'}}>🌍</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* --- UTILS --- */
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+  .perspective-1000 { perspective: 1000px; }
+  .transform-style-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; }
+  .rotate-y-180 { transform: rotateY(180deg); }
+`;
+document.head.appendChild(style);
